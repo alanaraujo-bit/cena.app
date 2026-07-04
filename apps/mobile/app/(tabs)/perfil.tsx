@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { GlassCard, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
 import { useAuth } from '@/features/auth';
+import { useWatchCounts } from '@/features/titles/hooks';
 import { useStrings } from '@/i18n';
 import { useUiStore, type ThemePreference } from '@/store/uiStore';
 import { useTheme } from '@/theme';
@@ -9,6 +10,7 @@ export default function ProfileScreen() {
   const t = useStrings();
   const theme = useTheme();
   const { user, signOut } = useAuth();
+  const counts = useWatchCounts();
   const themePreference = useUiStore((s) => s.themePreference);
   const setThemePreference = useUiStore((s) => s.setThemePreference);
 
@@ -39,9 +41,9 @@ export default function ProfileScreen() {
       </GlassCard>
 
       <View style={{ flexDirection: 'row', gap: theme.spacing.md }}>
-        <StatTile label={t.profile.watched} value="0" />
-        <StatTile label={t.profile.followers} value="0" />
-        <StatTile label={t.profile.following} value="0" />
+        <StatTile label={t.profile.watched} value={String(counts.data?.assistido ?? 0)} />
+        <StatTile label={t.profile.watching} value={String(counts.data?.assistindo ?? 0)} />
+        <StatTile label={t.profile.wantToWatch} value={String(counts.data?.para_assistir ?? 0)} />
       </View>
 
       <GlassCard>

@@ -44,6 +44,7 @@ model User {
 
   onboarding   OnboardingCompletion?
   refreshTokens RefreshToken[]
+  watchEntries WatchEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,4 +95,71 @@ model OnboardingCompletion {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Catalog + personal tracking
+// ---------------------------------------------------------------------------
+
+enum MediaType {
+  movie
+  tv
+}
+
+/// Three explicit, parallel watch states — never inferred from other fields.
+enum WatchState {
+  assistido
+  assistindo
+  para_assistir
+}
+
+/// Cached TMDB metadata. Also the CinephileContentMetadata source for the ICG
+/// calculation (genres/countries/decade/popularity/runtime/director), so we
+/// never recompute it per request. Refreshed opportunistically on detail view.
+model Title {
+  id        String    @id @default(cuid())
+  /// Stable cross-system key: "movie-603".
+  key       String    @unique
+  tmdbId    Int
+  mediaType MediaType
+
+  title          String
+  year           Int?
+  overview       String  @default("")
+  posterUrl      String?
+  backdropUrl    String?
+  voteAverage    Float   @default(0)
+  popularity     Float   @default(0)
+  runtimeMinutes Int?
+  genreIds       Int[]   @default([])
+  countries      String[] @default([])
+  director       String?
+
+  watchEntries WatchEntry[]
+
+  cachedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tmdbId, mediaType])
+}
+
+/// A user's relationship to a title. One row per (user, title); the `state`
+/// enum is explicit, and rating/watchedAt attach to a watched entry.
+model WatchEntry {
+  id      String     @id @default(cuid())
+  userId  String
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titleId String
+  title   Title      @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  state     WatchState
+  rating    Float?
+  watchedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, titleId])
+  @@index([userId, state])
+  @@index([titleId])
 }

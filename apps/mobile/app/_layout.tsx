@@ -37,6 +37,7 @@ function RootNavigator() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(onboarding)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="title/[key]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen
         name="log"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}

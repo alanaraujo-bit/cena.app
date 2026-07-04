@@ -9,6 +9,7 @@ import { authPlugin } from './plugins/auth';
 import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
 import { onboardingRoutes } from './routes/onboarding';
+import { titleRoutes } from './routes/titles';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -38,6 +39,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(healthRoutes);
       await v1.register(authRoutes);
       await v1.register(onboardingRoutes);
+      await v1.register(titleRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );

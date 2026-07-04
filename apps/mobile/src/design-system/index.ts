@@ -1,10 +1,12 @@
 export { ThemedText } from './ThemedText';
 export { GlassSurface } from './GlassSurface';
 export { GlassCard } from './GlassCard';
+export { PosterCard } from './PosterCard';
 export { PrimaryButton } from './PrimaryButton';
 export { GlassTextField } from './GlassTextField';
 export { GlassTabBar } from './GlassTabBar';
 export { SegmentedControl } from './SegmentedControl';
+export { RatingControl } from './RatingControl';
 export { AppBackground } from './AppBackground';
 export { Screen } from './Screen';
 export { Icon, type IconName } from './Icon';

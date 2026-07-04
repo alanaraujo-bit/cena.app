@@ -16,11 +16,9 @@ export function useAuthGate() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    const group = segments[0]; // '(auth)' | '(onboarding)' | '(tabs)' | 'log' | undefined
+    const group = segments[0]; // '(auth)' | '(onboarding)' | '(tabs)' | 'title' | 'log' | undefined
     const inAuth = group === '(auth)';
     const inOnboarding = group === '(onboarding)';
-    const inTabs = group === '(tabs)';
-    const inModal = group === 'log';
 
     if (status === 'unauthenticated') {
       if (!inAuth) router.replace('/(auth)/login');
@@ -35,9 +33,10 @@ export function useAuthGate() {
       return;
     }
 
-    // Fully set up: allowed in the tabs and the root Log modal. Anything else
-    // (auth, onboarding, or the bare index) bounces to the tabs.
-    if (!inTabs && !inModal) {
+    // Fully set up: only the auth/onboarding groups (or the bare index) bounce
+    // to the tabs. Everything else — (tabs), the Log modal, and pushed app
+    // stacks like /title/[key], /user/[username] — is allowed through.
+    if (inAuth || inOnboarding || group === undefined) {
       router.replace('/(tabs)');
     }
   }, [status, user, segments, router]);

@@ -21,7 +21,11 @@ export type IconName =
   | 'bell'
   | 'settings'
   | 'check'
+  | 'star'
+  | 'star-half'
   | 'star-fill'
+  | 'chevron-left'
+  | 'play'
   | 'close';
 
 const MAP: Record<IconName, { sf: SymbolViewProps['name']; ion: keyof typeof Ionicons.glyphMap }> = {
@@ -36,7 +40,11 @@ const MAP: Record<IconName, { sf: SymbolViewProps['name']; ion: keyof typeof Ion
   bell: { sf: 'bell', ion: 'notifications-outline' },
   settings: { sf: 'gearshape', ion: 'settings-outline' },
   check: { sf: 'checkmark', ion: 'checkmark' },
+  star: { sf: 'star', ion: 'star-outline' },
+  'star-half': { sf: 'star.leadinghalf.filled', ion: 'star-half' },
   'star-fill': { sf: 'star.fill', ion: 'star' },
+  'chevron-left': { sf: 'chevron.left', ion: 'chevron-back' },
+  play: { sf: 'play.fill', ion: 'play' },
   close: { sf: 'xmark', ion: 'close' },
 };
 
