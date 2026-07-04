@@ -9,8 +9,9 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
-// 1. Watch the whole monorepo so changes in packages/shared trigger reloads.
-config.watchFolders = [workspaceRoot];
+// 1. Watch the whole monorepo (in addition to Expo's defaults) so changes in
+// packages/shared trigger reloads.
+config.watchFolders = [...(config.watchFolders ?? []), workspaceRoot];
 
 // 2. Resolve modules from both the app and the hoisted root store.
 config.resolver.nodeModulesPaths = [

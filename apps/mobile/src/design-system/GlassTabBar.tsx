@@ -1,7 +1,4 @@
-// Import the tab-bar prop type from expo-router's OWN bundled copy of
-// react-navigation. Using the standalone @react-navigation/bottom-tabs package
-// here triggers a dual-package type mismatch against what <Tabs> actually passes.
-import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
