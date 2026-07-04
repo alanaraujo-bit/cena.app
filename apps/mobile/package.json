@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@cena/shared": "workspace:*",
+    "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.18.5",
@@ -47,7 +48,9 @@
   },
   "expo": {
     "install": {
-      "exclude": ["@react-navigation/bottom-tabs"]
+      "exclude": [
+        "@react-navigation/bottom-tabs"
+      ]
     }
   }
 }
