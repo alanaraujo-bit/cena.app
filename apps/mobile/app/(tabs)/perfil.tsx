@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
-import { GlassCard, GlassTextField, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
+import { Pressable, View } from 'react-native';
+import type { PrivacyMode } from '@cena/shared';
+import { AvatarWithFrame, GlassCard, GlassTextField, Icon, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
 import { useAuth } from '@/features/auth';
+import { usePendingRequests, useRespondToRequest } from '@/features/follow/hooks';
 import { ProfileView } from '@/features/profile/ProfileView';
 import { useProfile, useUpdateProfile } from '@/features/profile/hooks';
 import { useStrings } from '@/i18n';
@@ -33,6 +35,15 @@ export default function ProfileScreen() {
           </ThemedText>
         </GlassCard>
       )}
+
+      {profile.data?.privacyMode === 'privado' ? <PendingRequests /> : null}
+
+      <GlassCard>
+        <ThemedText variant="subheadline" style={{ marginBottom: theme.spacing.md }}>
+          Privacidade
+        </ThemedText>
+        <PrivacyControl username={user?.username} value={profile.data?.privacyMode} />
+      </GlassCard>
 
       <GlassCard>
         <ThemedText variant="subheadline" style={{ marginBottom: theme.spacing.md }}>
@@ -98,5 +109,71 @@ function EditBio({ username, bio }: { username: string | undefined; bio: string 
         <PrimaryButton label="Cancelar" variant="ghost" onPress={() => setEditing(false)} style={{ flex: 1 }} />
       </View>
     </View>
+  );
+}
+
+function PrivacyControl({
+  username,
+  value,
+}: {
+  username: string | undefined;
+  value: PrivacyMode | undefined;
+}) {
+  const update = useUpdateProfile(username);
+  if (!value) return null;
+
+  return (
+    <SegmentedControl<PrivacyMode>
+      value={value}
+      onChange={(privacyMode) => update.mutate({ privacyMode })}
+      segments={[
+        { value: 'publico', label: 'Público' },
+        { value: 'apenas_amigos', label: 'Amigos' },
+        { value: 'privado', label: 'Privado' },
+      ]}
+    />
+  );
+}
+
+function PendingRequests() {
+  const theme = useTheme();
+  const requests = usePendingRequests();
+  const respond = useRespondToRequest();
+
+  if (!requests.data || requests.data.length === 0) return null;
+
+  return (
+    <GlassCard>
+      <ThemedText variant="subheadline" style={{ marginBottom: theme.spacing.md }}>
+        Solicitações de seguidor
+      </ThemedText>
+      <View style={{ gap: theme.spacing.md }}>
+        {requests.data.map((req) => (
+          <View key={req.username} style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+            <AvatarWithFrame avatarUrl={req.avatarUrl} name={req.name} size={40} />
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="callout">{req.name}</ThemedText>
+              <ThemedText variant="caption" color="secondary">
+                @{req.username}
+              </ThemedText>
+            </View>
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              <Pressable
+                onPress={() => respond.mutate({ username: req.username, accept: true })}
+                hitSlop={8}
+              >
+                <Icon name="check" size={22} color={theme.colors.status.success} />
+              </Pressable>
+              <Pressable
+                onPress={() => respond.mutate({ username: req.username, accept: false })}
+                hitSlop={8}
+              >
+                <Icon name="close" size={22} color={theme.colors.status.danger} />
+              </Pressable>
+            </View>
+          </View>
+        ))}
+      </View>
+    </GlassCard>
   );
 }

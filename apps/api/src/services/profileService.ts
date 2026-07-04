@@ -7,6 +7,7 @@ import type {
 } from '@cena/shared';
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
+import { getFollowCounts, getRelationship, isMutual } from './followService';
 import { ensureTitleCached } from './watchService';
 
 /** A user is considered "online" if active within this window. */
@@ -108,14 +109,15 @@ export async function removeFavorite(userId: string, key: string): Promise<Title
 export async function updateProfile(
   userId: string,
   input: UpdateProfileInput,
-): Promise<{ name: string; bio: string | null }> {
+): Promise<{ name: string; bio: string | null; privacyMode: string }> {
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.bio !== undefined ? { bio: input.bio } : {}),
+      ...(input.privacyMode !== undefined ? { privacyMode: input.privacyMode } : {}),
     },
-    select: { name: true, bio: true },
+    select: { name: true, bio: true, privacyMode: true },
   });
   return user;
 }
@@ -138,25 +140,40 @@ export async function getPublicProfile(
   if (!user) throw AppError.notFound('Perfil não encontrado.');
 
   const isOwnProfile = user.id === viewerId;
-  // No follow graph yet (lands in a later milestone) — until then, anything
-  // other than "público" is visible only to the owner.
-  const isRestricted = !isOwnProfile && user.privacyMode !== 'publico';
+  const [relationship, counts] = await Promise.all([
+    getRelationship(viewerId, user.id),
+    getFollowCounts(user.id),
+  ]);
+
+  // Público: always visible. Apenas-amigos: visible only to mutual followers.
+  // Privado: visible only once the owner has accepted the viewer's request.
+  const isRestricted =
+    !isOwnProfile &&
+    user.privacyMode !== 'publico' &&
+    !(user.privacyMode === 'apenas_amigos' && (await isMutual(viewerId, user.id))) &&
+    !(user.privacyMode === 'privado' && relationship === 'accepted');
 
   const online = Date.now() - user.lastActiveAt.getTime() < PRESENCE_WINDOW_MS;
 
+  const base = {
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    activeFrameId: user.activeFrameId,
+    online,
+    privacyMode: user.privacyMode,
+    followersCount: counts.followers,
+    followingCount: counts.following,
+    relationship,
+    isOwnProfile,
+  };
+
   if (isRestricted) {
     return {
-      username: user.username,
+      ...base,
       name: user.name,
       bio: null,
-      avatarUrl: user.avatarUrl,
-      activeFrameId: user.activeFrameId,
-      online,
-      followersCount: 0,
-      followingCount: 0,
       stats: EMPTY_STATS,
       favorites: [],
-      isOwnProfile,
       isRestricted: true,
     };
   }
@@ -167,18 +184,11 @@ export async function getPublicProfile(
   ]);
 
   return {
-    username: user.username,
+    ...base,
     name: user.name,
     bio: user.bio,
-    avatarUrl: user.avatarUrl,
-    activeFrameId: user.activeFrameId,
-    online,
-    // Follow graph lands in a later milestone; both counts are 0 until then.
-    followersCount: 0,
-    followingCount: 0,
     stats,
     favorites,
-    isOwnProfile,
     isRestricted: false,
   };
 }

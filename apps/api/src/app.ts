@@ -6,7 +6,10 @@ import { prisma } from './db';
 import { env } from './env';
 import { errorHandler } from './lib/errors';
 import { authPlugin } from './plugins/auth';
+import { activityRoutes } from './routes/activities';
 import { authRoutes } from './routes/auth';
+import { feedRoutes } from './routes/feed';
+import { followRoutes } from './routes/follow';
 import { healthRoutes } from './routes/health';
 import { onboardingRoutes } from './routes/onboarding';
 import { profileRoutes } from './routes/profile';
@@ -42,6 +45,9 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(onboardingRoutes);
       await v1.register(titleRoutes);
       await v1.register(profileRoutes);
+      await v1.register(followRoutes);
+      await v1.register(feedRoutes);
+      await v1.register(activityRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );

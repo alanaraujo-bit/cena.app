@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { displayNameSchema, usernameSchema } from './common';
+import { followRelationshipSchema, privacyModeSchema } from './social';
 import { titleKeySchema, titleSummarySchema } from './titles';
 
 export const updateProfileSchema = z.object({
   name: displayNameSchema.optional(),
   bio: z.string().max(280, 'Bio muito longa (máximo 280 caracteres).').nullable().optional(),
+  privacyMode: privacyModeSchema.optional(),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
@@ -27,13 +29,16 @@ export const publicProfileSchema = z.object({
   activeFrameId: z.string().nullable(),
   /** Derived from lastActiveAt — a heartbeat, not a live socket. */
   online: z.boolean(),
+  privacyMode: privacyModeSchema,
   followersCount: z.number().int(),
   followingCount: z.number().int(),
+  /** The viewer's own follow relationship toward this profile. */
+  relationship: followRelationshipSchema,
   stats: watchStatsSchema,
   favorites: z.array(titleSummarySchema),
   /** True only for the profile owner viewing their own page. */
   isOwnProfile: z.boolean(),
-  /** True if the viewer cannot see full details (private profile, not owner). */
+  /** True if the viewer cannot see full details (private profile, not owner/friend). */
   isRestricted: z.boolean(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;

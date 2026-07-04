@@ -1,6 +1,7 @@
 import { ScrollView, View } from 'react-native';
 import type { PublicProfile } from '@cena/shared';
 import { AvatarWithFrame, GlassCard, PosterCard, StatTile, ThemedText } from '@/design-system';
+import { FollowButton } from '@/features/follow/FollowButton';
 import { useTheme } from '@/theme';
 
 interface ProfileViewProps {
@@ -41,6 +42,12 @@ export function ProfileView({ profile, onOpenTitle, headerExtra }: ProfileViewPr
           <ThemedText variant="body" color="secondary" style={{ marginTop: theme.spacing.md }}>
             {profile.bio}
           </ThemedText>
+        ) : null}
+
+        {!profile.isOwnProfile ? (
+          <View style={{ marginTop: theme.spacing.md }}>
+            <FollowButton username={profile.username} relationship={profile.relationship} />
+          </View>
         ) : null}
 
         {headerExtra}

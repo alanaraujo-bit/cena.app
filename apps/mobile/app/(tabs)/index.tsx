@@ -1,44 +1,62 @@
-import { View } from 'react-native';
-import { GlassCard, Screen, ThemedText } from '@/design-system';
-import { useHealth } from '@/features/health/useHealth';
+import { useMemo } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
+import { AppBackground, GlassCard, ThemedText } from '@/design-system';
+import { ActivityFeedItem } from '@/features/feed/ActivityFeedItem';
+import { useFeed } from '@/features/feed/hooks';
 import { useStrings } from '@/i18n';
 import { useTheme } from '@/theme';
 
 export default function FeedScreen() {
   const t = useStrings();
   const theme = useTheme();
-  const health = useHealth();
+  const feed = useFeed();
 
-  const status = health.isLoading
-    ? { label: 'Conectando à API…', color: theme.colors.text.tertiary }
-    : health.isError
-      ? { label: 'API offline — inicie o servidor', color: theme.colors.status.danger }
-      : { label: `API conectada · ${health.data?.service}`, color: theme.colors.status.success };
+  const items = useMemo(() => feed.data?.pages.flatMap((page) => page.items) ?? [], [feed.data]);
 
   return (
-    <Screen title={t.feed.title} subtitle={t.common.tagline}>
-      <GlassCard>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: status.color,
-            }}
-          />
-          <ThemedText variant="callout" style={{ color: status.color }}>
-            {status.label}
-          </ThemedText>
+    <AppBackground>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+        <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: 8, paddingBottom: theme.spacing.md }}>
+          <ThemedText variant="title">{t.feed.title}</ThemedText>
         </View>
-      </GlassCard>
 
-      <GlassCard>
-        <ThemedText variant="headline">Bem-vindo à CENA 🎬</ThemedText>
-        <ThemedText variant="body" color="secondary" style={{ marginTop: 8 }}>
-          {t.feed.empty}
-        </ThemedText>
-      </GlassCard>
-    </Screen>
+        {feed.isLoading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={theme.colors.accent.onSurface} size="large" />
+          </View>
+        ) : items.length === 0 ? (
+          <View style={{ paddingHorizontal: theme.spacing.lg }}>
+            <GlassCard>
+              <ThemedText variant="body" color="secondary">
+                {t.feed.empty}
+              </ThemedText>
+            </GlassCard>
+          </View>
+        ) : (
+          <FlashList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <ActivityFeedItem item={item} />}
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            onEndReachedThreshold={0.4}
+            onEndReached={() => {
+              if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
+            }}
+            onRefresh={() => void feed.refetch()}
+            refreshing={feed.isRefetching}
+            ListFooterComponent={
+              feed.isFetchingNextPage ? (
+                <View style={{ paddingVertical: 16 }}>
+                  <ActivityIndicator color={theme.colors.accent.onSurface} />
+                </View>
+              ) : null
+            }
+          />
+        )}
+      </SafeAreaView>
+    </AppBackground>
   );
 }

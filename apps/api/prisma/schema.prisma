@@ -46,6 +46,11 @@ model User {
   refreshTokens RefreshToken[]
   watchEntries WatchEntry[]
   favorites    FavoriteTitle[]
+  activities   Activity[]
+  likes        Like[]
+  comments     Comment[]
+  following    Follow[] @relation("Following")
+  followers    Follow[] @relation("Followers")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -138,6 +143,7 @@ model Title {
 
   watchEntries WatchEntry[]
   favoritedBy  FavoriteTitle[]
+  activities   Activity[]
 
   cachedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -182,4 +188,87 @@ model FavoriteTitle {
 
   @@unique([userId, titleId])
   @@index([userId, order])
+}
+
+// ---------------------------------------------------------------------------
+// Social layer
+// ---------------------------------------------------------------------------
+
+enum FollowStatus {
+  pending
+  accepted
+}
+
+/// Directed follow edge. Público targets auto-accept; privado targets create a
+/// pending row the owner must approve (brief §5.4). Apenas-amigos visibility
+/// is computed as "both directions accepted", not a distinct follow status.
+model Follow {
+  id          String       @id @default(cuid())
+  followerId  String
+  follower    User         @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  followed    User         @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  status      FollowStatus
+
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  @@unique([followerId, followingId])
+  @@index([followingId, status])
+  @@index([followerId, status])
+}
+
+/// Only the activity types we can actually produce today are emitted
+/// (watched/want_to_watch/rating); the rest of the shared enum is reserved
+/// for features landing in later milestones (Listas, referrals, Versus).
+enum ActivityType {
+  watched
+  want_to_watch
+  rating
+  review
+  list_created
+  referral
+  versus_created
+  versus_voted
+}
+
+model Activity {
+  id      String       @id @default(cuid())
+  userId  String
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    ActivityType
+  titleId String?
+  title   Title?       @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  rating  Float?
+
+  createdAt DateTime @default(now())
+
+  likes    Like[]
+  comments Comment[]
+
+  @@index([userId, createdAt])
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, activityId])
+  @@index([activityId])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([activityId, createdAt])
 }
