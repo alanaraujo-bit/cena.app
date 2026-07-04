@@ -1,7 +1,10 @@
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
-import { GlassCard, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
+import { GlassCard, GlassTextField, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
 import { useAuth } from '@/features/auth';
-import { useWatchCounts } from '@/features/titles/hooks';
+import { ProfileView } from '@/features/profile/ProfileView';
+import { useProfile, useUpdateProfile } from '@/features/profile/hooks';
 import { useStrings } from '@/i18n';
 import { useUiStore, type ThemePreference } from '@/store/uiStore';
 import { useTheme } from '@/theme';
@@ -9,42 +12,27 @@ import { useTheme } from '@/theme';
 export default function ProfileScreen() {
   const t = useStrings();
   const theme = useTheme();
+  const router = useRouter();
   const { user, signOut } = useAuth();
-  const counts = useWatchCounts();
+  const profile = useProfile(user?.username);
   const themePreference = useUiStore((s) => s.themePreference);
   const setThemePreference = useUiStore((s) => s.setThemePreference);
 
   return (
     <Screen title={t.profile.title}>
-      <GlassCard>
-        <View style={{ flexDirection: 'row', gap: theme.spacing.lg }}>
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: theme.colors.bg.layer2,
-              borderWidth: 2,
-              borderColor: theme.colors.accent.onSurface,
-            }}
-          />
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <ThemedText variant="headline">{user?.name ?? 'Seu perfil'}</ThemedText>
-            <ThemedText variant="callout" color="secondary">
-              @{user?.username ?? 'voce'}
-            </ThemedText>
-            <ThemedText variant="caption" color="accent" style={{ marginTop: 2 }}>
-              Espectador · Ordem Cinéfila
-            </ThemedText>
-          </View>
-        </View>
-      </GlassCard>
-
-      <View style={{ flexDirection: 'row', gap: theme.spacing.md }}>
-        <StatTile label={t.profile.watched} value={String(counts.data?.assistido ?? 0)} />
-        <StatTile label={t.profile.watching} value={String(counts.data?.assistindo ?? 0)} />
-        <StatTile label={t.profile.wantToWatch} value={String(counts.data?.para_assistir ?? 0)} />
-      </View>
+      {profile.data ? (
+        <ProfileView
+          profile={profile.data}
+          onOpenTitle={(key) => router.push(`/title/${key}`)}
+          headerExtra={<EditBio username={user?.username} bio={profile.data.bio} />}
+        />
+      ) : (
+        <GlassCard>
+          <ThemedText variant="body" color="secondary">
+            {t.common.loading}
+          </ThemedText>
+        </GlassCard>
+      )}
 
       <GlassCard>
         <ThemedText variant="subheadline" style={{ marginBottom: theme.spacing.md }}>
@@ -66,15 +54,49 @@ export default function ProfileScreen() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function EditBio({ username, bio }: { username: string | undefined; bio: string | null }) {
+  const theme = useTheme();
+  const update = useUpdateProfile(username);
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(bio ?? '');
+
+  if (!editing) {
+    return (
+      <PrimaryButton
+        label={bio ? 'Editar bio' : 'Adicionar bio'}
+        variant="ghost"
+        onPress={() => {
+          setValue(bio ?? '');
+          setEditing(true);
+        }}
+        style={{ marginTop: theme.spacing.md }}
+      />
+    );
+  }
+
   return (
-    <GlassCard style={{ flex: 1 }}>
-      <ThemedText variant="title" align="center">
-        {value}
-      </ThemedText>
-      <ThemedText variant="micro" color="tertiary" align="center" style={{ marginTop: 2 }}>
-        {label.toUpperCase()}
-      </ThemedText>
-    </GlassCard>
+    <View style={{ marginTop: theme.spacing.md, gap: theme.spacing.sm }}>
+      <GlassTextField
+        placeholder="Fale um pouco sobre você"
+        value={value}
+        onChangeText={setValue}
+        multiline
+        maxLength={280}
+      />
+      <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+        <PrimaryButton
+          label="Salvar"
+          loading={update.isPending}
+          onPress={() => {
+            update.mutate(
+              { bio: value.trim() || null },
+              { onSuccess: () => setEditing(false) },
+            );
+          }}
+          style={{ flex: 1 }}
+        />
+        <PrimaryButton label="Cancelar" variant="ghost" onPress={() => setEditing(false)} style={{ flex: 1 }} />
+      </View>
+    </View>
   );
 }

@@ -45,6 +45,7 @@ model User {
   onboarding   OnboardingCompletion?
   refreshTokens RefreshToken[]
   watchEntries WatchEntry[]
+  favorites    FavoriteTitle[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,6 +137,7 @@ model Title {
   director       String?
 
   watchEntries WatchEntry[]
+  favoritedBy  FavoriteTitle[]
 
   cachedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -162,4 +164,22 @@ model WatchEntry {
   @@unique([userId, titleId])
   @@index([userId, state])
   @@index([titleId])
+}
+
+/// A small, explicitly ordered shelf of favorite titles shown on the profile —
+/// distinct from watched history (brief §5.3).
+model FavoriteTitle {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titleId String
+  title   Title  @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  /// Ascending display order; new favorites append at the end.
+  order Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, titleId])
+  @@index([userId, order])
 }

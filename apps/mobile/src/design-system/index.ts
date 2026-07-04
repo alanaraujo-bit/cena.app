@@ -2,6 +2,8 @@ export { ThemedText } from './ThemedText';
 export { GlassSurface } from './GlassSurface';
 export { GlassCard } from './GlassCard';
 export { PosterCard } from './PosterCard';
+export { AvatarWithFrame } from './AvatarWithFrame';
+export { StatTile } from './StatTile';
 export { PrimaryButton } from './PrimaryButton';
 export { GlassTextField } from './GlassTextField';
 export { GlassTabBar } from './GlassTabBar';
