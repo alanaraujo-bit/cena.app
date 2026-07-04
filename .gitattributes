@@ -1,0 +1,11 @@
+# Normalize line endings to LF for all text files (cross-platform consistency).
+* text=auto eol=lf
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ttf binary
+*.otf binary
+*.hbc binary
