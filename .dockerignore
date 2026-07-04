@@ -1,0 +1,8 @@
+**/node_modules
+**/.expo
+**/.turbo
+**/dist
+**/dist-verify
+.git
+apps/mobile/ios
+apps/mobile/android
