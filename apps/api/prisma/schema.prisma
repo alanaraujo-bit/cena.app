@@ -59,6 +59,8 @@ model User {
   pushTokens   PushToken[]
   ownedFrames   UserFrame[] @relation("FrameOwner")
   giftedFrames  UserFrame[] @relation("FrameGiftedBy")
+  versusCreated Versus[]
+  versusVotes   VersusVote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,6 +154,8 @@ model Title {
   watchEntries WatchEntry[]
   favoritedBy  FavoriteTitle[]
   activities   Activity[]
+  versusAsA    Versus[] @relation("VersusTitleA")
+  versusAsB    Versus[] @relation("VersusTitleB")
 
   cachedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -248,6 +252,9 @@ model Activity {
   titleId String?
   title   Title?       @relation(fields: [titleId], references: [id], onDelete: Cascade)
   rating  Float?
+
+  versusId String?
+  versus   Versus? @relation(fields: [versusId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -382,6 +389,9 @@ model Notification {
   frameId String?
   frame   Frame?  @relation(fields: [frameId], references: [id], onDelete: Cascade)
 
+  versusId String?
+  versus   Versus? @relation(fields: [versusId], references: [id], onDelete: Cascade)
+
   read      Boolean  @default(false)
   readAt    DateTime?
   createdAt DateTime @default(now())
@@ -477,4 +487,55 @@ model UserFrame {
 
   @@unique([userId, frameId])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Filme Versus
+// ---------------------------------------------------------------------------
+
+enum VersusChoice {
+  a
+  b
+}
+
+/// A head-to-head poll between two titles (brief §5.8). Visible to anyone by
+/// id ("público"), but casting a vote requires having watched BOTH titles —
+/// enforced at vote time, not just at creation. Closes automatically once
+/// `closesAt` passes; there is no background job, `isClosed` is derived from
+/// `closesAt` at read time (same lazy-compute style as CinephileOrder).
+model Versus {
+  id        String @id @default(cuid())
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  titleAId String
+  titleA   Title  @relation("VersusTitleA", fields: [titleAId], references: [id], onDelete: Cascade)
+  titleBId String
+  titleB   Title  @relation("VersusTitleB", fields: [titleBId], references: [id], onDelete: Cascade)
+
+  question String?
+  closesAt DateTime
+
+  votes         VersusVote[]
+  activities    Activity[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+
+  @@index([creatorId, createdAt])
+}
+
+/// One vote per (versus, user) — final, never overwritten (brief: no vote changes).
+model VersusVote {
+  id       String       @id @default(cuid())
+  versusId String
+  versus   Versus       @relation(fields: [versusId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice   VersusChoice
+
+  createdAt DateTime @default(now())
+
+  @@unique([versusId, userId])
+  @@index([versusId])
 }

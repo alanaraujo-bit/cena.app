@@ -3,11 +3,18 @@ import { ACTIVITY_TYPES, PRIVACY_MODES } from '../constants/enums';
 import { idSchema, paginatedSchema } from './common';
 import { activeFrameSummarySchema } from './frames';
 import { titleSummarySchema } from './titles';
+import { versusSummarySchema } from './versus';
 
 export const activityTypeSchema = z.enum(ACTIVITY_TYPES);
 
 /** Only these are actually produced today; the rest of the enum is reserved. */
-export const supportedActivityTypeSchema = z.enum(['watched', 'want_to_watch', 'rating']);
+export const supportedActivityTypeSchema = z.enum([
+  'watched',
+  'want_to_watch',
+  'rating',
+  'versus_created',
+  'versus_voted',
+]);
 
 export const activityAuthorSchema = z.object({
   username: z.string(),
@@ -23,6 +30,7 @@ export const activityItemSchema = z.object({
   user: activityAuthorSchema,
   title: titleSummarySchema.nullable(),
   rating: z.number().nullable(),
+  versus: versusSummarySchema.nullable(),
   likeCount: z.number().int(),
   commentCount: z.number().int(),
   likedByMe: z.boolean(),

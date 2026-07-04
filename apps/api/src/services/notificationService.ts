@@ -16,6 +16,7 @@ const notificationInclude = {
   actor: { select: actorSelect },
   activity: { select: { id: true, title: true } },
   frame: { select: { key: true, name: true, effect: true, colors: true } },
+  versus: { select: { id: true } },
 } satisfies Prisma.NotificationInclude;
 
 type NotificationRow = Prisma.NotificationGetPayload<{ include: typeof notificationInclude }>;
@@ -48,6 +49,7 @@ function toNotificationItem(row: NotificationRow): NotificationItem {
       : null,
     commentPreview: row.commentPreview,
     frame: row.frame,
+    versus: row.versus,
   };
 }
 
@@ -76,6 +78,11 @@ function pushCopyFor(
         title: 'Moldura de presente 🎁',
         body: `${actorName} te presenteou com a moldura "${frameName}"!`,
       };
+    case 'versus_vote':
+      return {
+        title: 'Novo voto no seu Filme Versus 🎬',
+        body: `${actorName} votou no seu Filme Versus.`,
+      };
   }
 }
 
@@ -86,6 +93,7 @@ interface CreateNotificationInput {
   activityId?: string;
   commentPreview?: string;
   frameId?: string;
+  versusId?: string;
 }
 
 /** Persists the in-app notification, then best-effort fans it out as a push. */
@@ -107,6 +115,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
       activityId: input.activityId,
       commentPreview: input.commentPreview,
       frameId: input.frameId,
+      versusId: input.versusId,
     },
   });
 

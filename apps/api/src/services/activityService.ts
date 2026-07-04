@@ -8,18 +8,28 @@ import type {
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
 import { createNotification } from './notificationService';
+import { toTitleSummary } from './titleMapper';
+import { toVersusSummary } from './versusMapper';
 
-type SupportedActivityType = 'watched' | 'want_to_watch' | 'rating';
+type SupportedActivityType = 'watched' | 'want_to_watch' | 'rating' | 'versus_created' | 'versus_voted';
 
-/** Fire-and-forget style creation used by watchService on state transitions. */
-export async function createActivity(
-  userId: string,
-  type: SupportedActivityType,
-  titleId: string,
-  rating?: number | null,
-): Promise<void> {
+interface CreateActivityInput {
+  type: SupportedActivityType;
+  titleId?: string;
+  rating?: number | null;
+  versusId?: string;
+}
+
+/** Fire-and-forget style creation used by watchService/versusService on meaningful transitions. */
+export async function createActivity(userId: string, input: CreateActivityInput): Promise<void> {
   await prisma.activity.create({
-    data: { userId, type, titleId, rating: rating ?? null },
+    data: {
+      userId,
+      type: input.type,
+      titleId: input.titleId,
+      rating: input.rating ?? null,
+      versusId: input.versusId,
+    },
   });
 }
 
@@ -30,35 +40,47 @@ const authorSelect = {
   activeFrame: { select: { key: true, effect: true, colors: true } },
 } satisfies Prisma.UserSelect;
 
+const versusInclude = {
+  creator: { select: { username: true, name: true } },
+  titleA: true,
+  titleB: true,
+  votes: { select: { userId: true, choice: true } },
+} satisfies Prisma.VersusInclude;
+
 const activityInclude = {
   user: { select: authorSelect },
   title: true,
+  versus: { include: versusInclude },
   _count: { select: { likes: true, comments: true } },
 } satisfies Prisma.ActivityInclude;
 
 type ActivityRow = Prisma.ActivityGetPayload<{ include: typeof activityInclude }>;
 
-function toActivityItem(row: ActivityRow, likedActivityIds: Set<string>): ActivityItem {
+/** Batch-checks which of the given titles the user has marked "assistido" — kept local (not
+ * imported from watchService) to avoid a circular import, since watchService imports createActivity. */
+async function getWatchedTitleIdsBatch(userId: string, titleIds: string[]): Promise<Set<string>> {
+  if (titleIds.length === 0) return new Set();
+  const rows = await prisma.watchEntry.findMany({
+    where: { userId, state: 'assistido', titleId: { in: titleIds } },
+    select: { titleId: true },
+  });
+  return new Set(rows.map((r) => r.titleId));
+}
+
+function toActivityItem(
+  row: ActivityRow,
+  likedActivityIds: Set<string>,
+  viewerId: string,
+  watchedTitleIds: Set<string>,
+): ActivityItem {
   return {
     id: row.id,
     type: row.type,
     createdAt: row.createdAt.toISOString(),
     user: row.user,
-    title: row.title
-      ? {
-          key: row.title.key,
-          tmdbId: row.title.tmdbId,
-          mediaType: row.title.mediaType,
-          title: row.title.title,
-          year: row.title.year,
-          overview: row.title.overview,
-          posterUrl: row.title.posterUrl,
-          backdropUrl: row.title.backdropUrl,
-          voteAverage: row.title.voteAverage,
-          popularity: row.title.popularity,
-        }
-      : null,
+    title: row.title ? toTitleSummary(row.title) : null,
     rating: row.rating,
+    versus: row.versus ? toVersusSummary(row.versus, viewerId, watchedTitleIds) : null,
     likeCount: row._count.likes,
     commentCount: row._count.comments,
     likedByMe: likedActivityIds.has(row.id),
@@ -97,8 +119,17 @@ export async function getFeed(
   });
   const likedIds = new Set(likes.map((l) => l.activityId));
 
+  const versusTitleIds = new Set<string>();
+  for (const row of page) {
+    if (row.versus) {
+      versusTitleIds.add(row.versus.titleA.id);
+      versusTitleIds.add(row.versus.titleB.id);
+    }
+  }
+  const watchedTitleIds = await getWatchedTitleIdsBatch(viewerId, [...versusTitleIds]);
+
   return {
-    items: page.map((row) => toActivityItem(row, likedIds)),
+    items: page.map((row) => toActivityItem(row, likedIds, viewerId, watchedTitleIds)),
     nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
   };
 }

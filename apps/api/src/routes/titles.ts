@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parseTitleKey, setWatchStateSchema, titleKeySchema } from '@cena/shared';
 import { searchTitles, titleDetail, trendingTitles } from '../services/titleService';
-import { getTitleStatus, getWatchCounts, setWatchState } from '../services/watchService';
+import { getTitleStatus, getWatchCounts, listWatchedTitles, setWatchState } from '../services/watchService';
 
 const searchQuerySchema = z.object({
   q: z.string().min(1, 'Informe um termo de busca.'),
@@ -25,6 +25,11 @@ export async function titleRoutes(app: FastifyInstance) {
 
   app.get('/titles/counts', async (request) => {
     return getWatchCounts(request.userId);
+  });
+
+  /** Titles the caller marked "assistido" — the picker source for Filme Versus creation. */
+  app.get('/titles/watched', async (request) => {
+    return { items: await listWatchedTitles(request.userId) };
   });
 
   app.get('/titles/:key', async (request) => {

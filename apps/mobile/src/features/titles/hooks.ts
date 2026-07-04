@@ -48,6 +48,15 @@ export function useWatchCounts() {
   });
 }
 
+/** The caller's own "assistido" list — the picker source for Filme Versus creation. */
+export function useMyWatchedTitles() {
+  return useQuery({
+    queryKey: ['titles', 'watched'],
+    queryFn: () => titlesApi.watched(),
+    staleTime: 30_000,
+  });
+}
+
 export function useTitleStatus(key: string) {
   return useQuery({
     queryKey: ['titles', 'status', key],

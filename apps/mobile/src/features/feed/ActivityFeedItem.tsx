@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import type { ActivityItem } from '@cena/shared';
 import { AvatarWithFrame, GlassCard, GlassTextField, Icon, PrimaryButton, ThemedText } from '@/design-system';
+import { VersusCard } from '@/features/versus/VersusCard';
 import { useTheme } from '@/theme';
 import { useAddComment, useComments, useToggleLike } from './hooks';
 
@@ -16,6 +17,10 @@ function verbFor(item: ActivityItem): string {
       return 'quer assistir';
     case 'rating':
       return `avaliou com nota ${item.rating?.toFixed(1)}`;
+    case 'versus_created':
+      return 'criou um Filme Versus';
+    case 'versus_voted':
+      return 'votou em um Filme Versus';
     default:
       return 'interagiu com';
   }
@@ -53,7 +58,11 @@ export function ActivityFeedItem({ item }: { item: ActivityItem }) {
         </View>
       </Pressable>
 
-      {item.title ? (
+      {item.versus ? (
+        <View style={{ marginTop: theme.spacing.md }}>
+          <VersusCard versus={item.versus} />
+        </View>
+      ) : item.title ? (
         <Pressable
           onPress={() => router.push(`/title/${item.title!.key}`)}
           style={[styles.posterRow, { marginTop: theme.spacing.md }]}

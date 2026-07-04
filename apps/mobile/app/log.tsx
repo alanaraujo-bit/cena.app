@@ -32,12 +32,15 @@ export default function LogSheet() {
 
           <View style={{ gap: theme.spacing.md, marginTop: theme.spacing.md }}>
             <PrimaryButton label={t.log.markWatched} variant="primary" onPress={() => {}} />
-            <PrimaryButton label={t.log.startVersus} variant="glass" onPress={() => {}} />
+            <PrimaryButton
+              label={t.log.startVersus}
+              variant="glass"
+              onPress={() => {
+                router.back();
+                router.push('/versus/criar');
+              }}
+            />
           </View>
-
-          <ThemedText variant="caption" color="tertiary" align="center" style={{ marginTop: 8 }}>
-            {t.common.comingSoon}
-          </ThemedText>
         </View>
       </SafeAreaView>
     </AppBackground>

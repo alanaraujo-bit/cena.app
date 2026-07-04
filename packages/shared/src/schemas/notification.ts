@@ -15,6 +15,7 @@ export const supportedNotificationTypeSchema = z.enum([
   'follow_request',
   'follow_accepted',
   'frame_gift',
+  'versus_vote',
 ]);
 export type SupportedNotificationType = z.infer<typeof supportedNotificationTypeSchema>;
 
@@ -39,6 +40,7 @@ export const notificationItemSchema = z.object({
       colors: z.array(z.string()),
     })
     .nullable(),
+  versus: z.object({ id: idSchema }).nullable(),
 });
 export type NotificationItem = z.infer<typeof notificationItemSchema>;
 

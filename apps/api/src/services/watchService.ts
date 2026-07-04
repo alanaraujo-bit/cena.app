@@ -3,12 +3,14 @@ import {
   parseTitleKey,
   type SetWatchStateInput,
   type TitleSocialStatus,
+  type TitleSummary,
 } from '@cena/shared';
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
 import { createActivity } from './activityService';
 import { recordRankingEvent } from './rankingService';
 import { titleDetail } from './titleService';
+import { toTitleSummary } from './titleMapper';
 
 /** Days before a cached Title is considered stale and refetched from TMDB. */
 const CACHE_TTL_DAYS = 7;
@@ -112,7 +114,7 @@ export async function setWatchState(
   // no-op re-save.
   const previousState = existing?.state ?? null;
   if (isWatched && previousState !== 'assistido') {
-    await createActivity(userId, 'watched', titleId);
+    await createActivity(userId, { type: 'watched', titleId });
     await recordRankingEvent(userId, 'add', title);
   }
   if (!isWatched && previousState === 'assistido') {
@@ -120,10 +122,10 @@ export async function setWatchState(
     await recordRankingEvent(userId, 'remove', title);
   }
   if (input.state === 'para_assistir' && previousState !== 'para_assistir') {
-    await createActivity(userId, 'want_to_watch', titleId);
+    await createActivity(userId, { type: 'want_to_watch', titleId });
   }
   if (isWatched && rating !== null && rating !== (existing?.rating ?? null)) {
-    await createActivity(userId, 'rating', titleId, rating);
+    await createActivity(userId, { type: 'rating', titleId, rating });
   }
 
   return toStatus(entry);
@@ -142,4 +144,24 @@ export async function getWatchCounts(
     counts[g.state as keyof typeof counts] = g._count._all;
   }
   return counts;
+}
+
+/** Titles the user has marked "assistido" — the pool eligible for Filme Versus (brief §5.8). */
+export async function listWatchedTitles(userId: string): Promise<TitleSummary[]> {
+  const rows = await prisma.watchEntry.findMany({
+    where: { userId, state: 'assistido' },
+    orderBy: { watchedAt: 'desc' },
+    include: { title: true },
+  });
+  return rows.map((r) => toTitleSummary(r.title));
+}
+
+/** Ids of the given titles the user has marked "assistido" — used for Versus vote eligibility. */
+export async function getWatchedTitleIds(userId: string, titleIds: string[]): Promise<Set<string>> {
+  if (titleIds.length === 0) return new Set();
+  const rows = await prisma.watchEntry.findMany({
+    where: { userId, state: 'assistido', titleId: { in: titleIds } },
+    select: { titleId: true },
+  });
+  return new Set(rows.map((r) => r.titleId));
 }

@@ -17,4 +17,5 @@ export const titlesApi = {
     api.post<TitleSocialStatus>('/titles/watch', input),
   counts: () =>
     api.get<{ assistido: number; assistindo: number; para_assistir: number }>('/titles/counts'),
+  watched: () => api.get<{ items: TitleSummary[] }>('/titles/watched'),
 };

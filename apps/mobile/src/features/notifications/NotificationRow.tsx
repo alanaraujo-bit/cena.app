@@ -21,6 +21,8 @@ function textFor(item: NotificationItem): string {
         : `${item.actor.name} comentou na sua atividade`;
     case 'frame_gift':
       return `${item.actor.name} te presenteou com a moldura "${item.frame?.name}" 🎁`;
+    case 'versus_vote':
+      return `${item.actor.name} votou no seu Filme Versus 🎬`;
     default:
       return `${item.actor.name} interagiu com você`;
   }
@@ -34,6 +36,7 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
   const handlePress = () => {
     if (!item.read) markRead.mutate(item.id);
     if (item.type === 'frame_gift') router.push('/molduras');
+    else if (item.type === 'versus_vote' && item.versus) router.push(`/versus/${item.versus.id}`);
     else if (item.activity?.title) router.push(`/title/${item.activity.title.key}`);
     else router.push(`/user/${item.actor.username}`);
   };

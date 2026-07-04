@@ -8,3 +8,4 @@ export * from './ranking';
 export * from './health';
 export * from './notification';
 export * from './frames';
+export * from './versus';

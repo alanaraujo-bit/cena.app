@@ -17,6 +17,7 @@ import { onboardingRoutes } from './routes/onboarding';
 import { profileRoutes } from './routes/profile';
 import { rankingRoutes } from './routes/ranking';
 import { titleRoutes } from './routes/titles';
+import { versusRoutes } from './routes/versus';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -54,6 +55,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(rankingRoutes);
       await v1.register(notificationRoutes);
       await v1.register(frameRoutes);
+      await v1.register(versusRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );
