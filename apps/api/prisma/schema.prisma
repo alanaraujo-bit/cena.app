@@ -53,6 +53,9 @@ model User {
   followers    Follow[] @relation("Followers")
   cinephileOrder  CinephileOrder?
   rankingEvents   RankingEvent[]
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+  notificationsCaused  Notification[] @relation("NotificationActor")
+  pushTokens   PushToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -247,6 +250,7 @@ model Activity {
 
   likes    Like[]
   comments Comment[]
+  notifications Notification[]
 
   @@index([userId, createdAt])
 }
@@ -336,4 +340,61 @@ model RankingEvent {
 
   @@index([userId, createdAt])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+/// Mirrors the shared NOTIFICATION_TYPES enum. Only like/comment/new_follower/
+/// follow_request/follow_accepted are actually emitted today — unlike,
+/// profile_interaction and versus_vote are reserved for later milestones.
+enum NotificationType {
+  like
+  unlike
+  comment
+  new_follower
+  follow_request
+  follow_accepted
+  profile_interaction
+  versus_vote
+}
+
+/// One row per in-app notification. Denormalizes the comment body at creation
+/// time (commentPreview) so the notification stays readable even if the
+/// underlying comment is later edited or deleted — never joined live.
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String
+  recipient   User             @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actorId     String
+  actor       User             @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  type        NotificationType
+
+  activityId  String?
+  activity    Activity?        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  commentPreview String?
+
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([recipientId, read])
+}
+
+/// One row per registered device. Keyed by the Expo push token itself since a
+/// token belongs to one device — re-registering under a different user (e.g.
+/// shared device, re-login) simply reassigns ownership.
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String
+
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId])
 }

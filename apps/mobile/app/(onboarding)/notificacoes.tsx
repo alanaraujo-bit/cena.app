@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { GlassCard, ThemedText } from '@/design-system';
+import { notificationsApi } from '@/features/notifications/api';
 import { onboardingApi } from '@/features/onboarding/api';
 import { OnboardingScaffold } from '@/features/onboarding/OnboardingScaffold';
+import { registerForPushNotificationsAsync } from '@/lib/push';
 import { useTheme } from '@/theme';
 
 const REASONS = [
@@ -17,11 +19,17 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // The real OS permission prompt is wired in the notifications milestone.
-  // Here we prime the value first, then record the choice.
   async function proceed(primed: boolean) {
     setLoading(true);
     try {
+      if (primed) {
+        try {
+          const token = await registerForPushNotificationsAsync();
+          if (token) await notificationsApi.registerPushToken(token, Platform.OS === 'ios' ? 'ios' : 'android');
+        } catch {
+          // best-effort — onboarding still completes without push.
+        }
+      }
       await onboardingApi.setStep({ step: 'notificationsPrimed', value: primed });
       router.push('/(onboarding)/concluir');
     } finally {

@@ -69,12 +69,12 @@ eas build --profile development --platform ios
 ## Roadmap (milestones)
 
 1. ✅ **Base**: monorepo, tema, design system, casca de 5 abas, `/health`, EAS.
-2. ⏳ Auth + onboarding (JWT access/refresh, argon2).
-3. Catálogo (TMDB) + detalhe + 3 estados de "assistir".
-4. Perfil (próprio + público) + moldura padrão.
-5. Feed + interações sociais.
-6. Ordem Cinéfila (ICG) + ranking.
-7. Notificações (in-app + push).
+2. ✅ **Auth + onboarding** (JWT access/refresh, argon2).
+3. ✅ **Catálogo** (TMDB) + detalhe + 3 estados de "assistir".
+4. ✅ **Perfil** (próprio + público) + moldura padrão.
+5. ✅ **Feed** + interações sociais.
+6. ✅ **Ordem Cinéfila (ICG)** + ranking.
+7. ✅ **Notificações** (in-app + push).
 8. Molduras (biblioteca, presente, animadas).
 9. Filme Versus.
 10. RevenueCat + paywall + premium.

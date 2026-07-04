@@ -6,3 +6,4 @@ export * from './social';
 export * from './profile';
 export * from './ranking';
 export * from './health';
+export * from './notification';

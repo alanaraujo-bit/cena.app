@@ -1,6 +1,7 @@
 import type { FollowRelationship, FollowRequest } from '@cena/shared';
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
+import { createNotification } from './notificationService';
 
 async function findUserByUsername(username: string) {
   const user = await prisma.user.findUnique({ where: { username: username.toLowerCase() } });
@@ -63,6 +64,11 @@ export async function follow(
   await prisma.follow.create({
     data: { followerId: viewerId, followingId: target.id, status },
   });
+  await createNotification({
+    recipientId: target.id,
+    actorId: viewerId,
+    type: status === 'pending' ? 'follow_request' : 'new_follower',
+  });
   return status;
 }
 
@@ -92,6 +98,7 @@ export async function acceptRequest(ownerId: string, requesterUsername: string):
     data: { status: 'accepted', respondedAt: new Date() },
   });
   if (result.count === 0) throw AppError.notFound('Solicitação não encontrada.');
+  await createNotification({ recipientId: requester.id, actorId: ownerId, type: 'follow_accepted' });
 }
 
 export async function declineRequest(ownerId: string, requesterUsername: string): Promise<void> {

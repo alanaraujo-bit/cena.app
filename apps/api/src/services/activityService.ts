@@ -7,6 +7,7 @@ import type {
 } from '@cena/shared';
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
+import { createNotification } from './notificationService';
 
 type SupportedActivityType = 'watched' | 'want_to_watch' | 'rating';
 
@@ -95,18 +96,25 @@ export async function getFeed(
   };
 }
 
-async function assertActivityExists(activityId: string): Promise<void> {
-  const exists = await prisma.activity.findUnique({ where: { id: activityId }, select: { id: true } });
-  if (!exists) throw AppError.notFound('Atividade não encontrada.');
+async function getActivityOwnerId(activityId: string): Promise<string> {
+  const activity = await prisma.activity.findUnique({
+    where: { id: activityId },
+    select: { userId: true },
+  });
+  if (!activity) throw AppError.notFound('Atividade não encontrada.');
+  return activity.userId;
 }
 
 export async function likeActivity(userId: string, activityId: string): Promise<void> {
-  await assertActivityExists(activityId);
-  await prisma.like.upsert({
+  const ownerId = await getActivityOwnerId(activityId);
+
+  const existing = await prisma.like.findUnique({
     where: { userId_activityId: { userId, activityId } },
-    create: { userId, activityId },
-    update: {},
   });
+  if (existing) return;
+
+  await prisma.like.create({ data: { userId, activityId } });
+  await createNotification({ recipientId: ownerId, actorId: userId, type: 'like', activityId });
 }
 
 export async function unlikeActivity(userId: string, activityId: string): Promise<void> {
@@ -118,10 +126,17 @@ export async function addComment(
   activityId: string,
   input: CreateCommentInput,
 ): Promise<CommentDto> {
-  await assertActivityExists(activityId);
+  const ownerId = await getActivityOwnerId(activityId);
   const comment = await prisma.comment.create({
     data: { userId, activityId, body: input.body },
     include: { user: { select: { username: true, name: true, avatarUrl: true } } },
+  });
+  await createNotification({
+    recipientId: ownerId,
+    actorId: userId,
+    type: 'comment',
+    activityId,
+    commentPreview: input.body.length > 140 ? `${input.body.slice(0, 140)}…` : input.body,
   });
   return {
     id: comment.id,
@@ -132,7 +147,7 @@ export async function addComment(
 }
 
 export async function listComments(activityId: string): Promise<CommentDto[]> {
-  await assertActivityExists(activityId);
+  await getActivityOwnerId(activityId);
   const rows = await prisma.comment.findMany({
     where: { activityId },
     orderBy: { createdAt: 'asc' },

@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppBackground } from '@/design-system';
 import { AuthProvider, useAuth, useAuthGate } from '@/features/auth';
+import { usePushTokenSync } from '@/features/notifications/usePushTokenSync';
 import { queryClient } from '@/lib/queryClient';
 import { ThemeProvider, useColorSchemeResolved, useTheme } from '@/theme';
 
@@ -29,6 +30,7 @@ export default function RootLayout() {
 function RootNavigator() {
   useAuthGate();
   const { status } = useAuth();
+  usePushTokenSync(status === 'authenticated');
 
   if (status === 'loading') return <SplashLoading />;
 
@@ -39,6 +41,7 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="title/[key]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="user/[username]" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="notificacoes" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen
         name="log"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
