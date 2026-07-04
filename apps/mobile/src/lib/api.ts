@@ -1,6 +1,7 @@
 import { API_VERSION, type ApiError } from '@cena/shared';
 import { config } from './config';
 import { tokenStore } from './secureStore';
+import { refreshSession } from './session';
 
 export class ApiRequestError extends Error {
   constructor(
@@ -23,7 +24,7 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   auth?: boolean;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function request<T>(path: string, options: RequestOptions = {}, isRetry = false): Promise<T> {
   const { body, versioned = true, auth = true, headers, ...rest } = options;
   const prefix = versioned ? `/${API_VERSION}` : '';
   const url = `${config.apiUrl}${prefix}${path}`;
@@ -42,6 +43,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers: finalHeaders,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  // Access token expired → refresh once and retry the original request.
+  if (res.status === 401 && auth && !isRetry) {
+    const newAccess = await refreshSession();
+    if (newAccess) return request<T>(path, options, true);
+  }
 
   if (res.status === 204) return undefined as T;
 

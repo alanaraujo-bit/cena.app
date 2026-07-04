@@ -1,0 +1,97 @@
+// CENA — Prisma schema.
+// Model names are in English for a consistent codebase convention; the domain
+// vocabulary (ranks, watch states) is preserved via enums/values.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+enum PrivacyMode {
+  publico
+  apenas_amigos
+  privado
+}
+
+enum CinephileLevel {
+  iniciante
+  intermediario
+  avancado
+  especialista
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+
+  // Gamification (populated in later milestones).
+  activeFrameId String?
+
+  privacyMode PrivacyMode @default(publico)
+
+  onboarding   OnboardingCompletion?
+  refreshTokens RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastActiveAt DateTime @default(now())
+
+  @@index([email])
+  @@index([username])
+}
+
+/// One row per issued refresh token (rotation): logging out or refreshing
+/// revokes the old row. A stolen-then-rotated token is detectable because its
+/// row is already revoked. See §5.1.
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the raw token — never store the token itself.
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  /// The token that replaced this one (rotation chain), for reuse detection.
+  replacedByHash String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+model OnboardingCompletion {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Self-rated level — a cold-start signal, not a locked label.
+  level          CinephileLevel?
+  /// TMDB genre ids selected as favorites.
+  favoriteGenres Int[]           @default([])
+
+  notificationsPrimed Boolean @default(false)
+  seededTitles        Boolean @default(false)
+  followedFounder     Boolean @default(false)
+
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

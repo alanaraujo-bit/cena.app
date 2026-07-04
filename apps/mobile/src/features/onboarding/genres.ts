@@ -1,0 +1,21 @@
+/** TMDB movie genres (id + pt-BR label). The ids are TMDB's canonical values. */
+export const TMDB_GENRES: { id: number; label: string }[] = [
+  { id: 28, label: 'Ação' },
+  { id: 12, label: 'Aventura' },
+  { id: 16, label: 'Animação' },
+  { id: 35, label: 'Comédia' },
+  { id: 80, label: 'Crime' },
+  { id: 99, label: 'Documentário' },
+  { id: 18, label: 'Drama' },
+  { id: 10751, label: 'Família' },
+  { id: 14, label: 'Fantasia' },
+  { id: 36, label: 'História' },
+  { id: 27, label: 'Terror' },
+  { id: 10402, label: 'Música' },
+  { id: 9648, label: 'Mistério' },
+  { id: 10749, label: 'Romance' },
+  { id: 878, label: 'Ficção científica' },
+  { id: 53, label: 'Thriller' },
+  { id: 10752, label: 'Guerra' },
+  { id: 37, label: 'Faroeste' },
+];

@@ -1,5 +1,6 @@
 import { View } from 'react-native';
-import { GlassCard, Screen, SegmentedControl, ThemedText } from '@/design-system';
+import { GlassCard, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
+import { useAuth } from '@/features/auth';
 import { useStrings } from '@/i18n';
 import { useUiStore, type ThemePreference } from '@/store/uiStore';
 import { useTheme } from '@/theme';
@@ -7,6 +8,7 @@ import { useTheme } from '@/theme';
 export default function ProfileScreen() {
   const t = useStrings();
   const theme = useTheme();
+  const { user, signOut } = useAuth();
   const themePreference = useUiStore((s) => s.themePreference);
   const setThemePreference = useUiStore((s) => s.setThemePreference);
 
@@ -25,8 +27,11 @@ export default function ProfileScreen() {
             }}
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <ThemedText variant="headline">Seu perfil</ThemedText>
-            <ThemedText variant="callout" color="accent">
+            <ThemedText variant="headline">{user?.name ?? 'Seu perfil'}</ThemedText>
+            <ThemedText variant="callout" color="secondary">
+              @{user?.username ?? 'voce'}
+            </ThemedText>
+            <ThemedText variant="caption" color="accent" style={{ marginTop: 2 }}>
               Espectador · Ordem Cinéfila
             </ThemedText>
           </View>
@@ -53,6 +58,8 @@ export default function ProfileScreen() {
           ]}
         />
       </GlassCard>
+
+      <PrimaryButton label="Sair" variant="glass" onPress={() => void signOut()} />
     </Screen>
   );
 }
