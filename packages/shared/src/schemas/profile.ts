@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { displayNameSchema, usernameSchema } from './common';
+import { cinephileOrderSchema } from './ranking';
 import { followRelationshipSchema, privacyModeSchema } from './social';
 import { titleKeySchema, titleSummarySchema } from './titles';
 
@@ -35,6 +36,7 @@ export const publicProfileSchema = z.object({
   /** The viewer's own follow relationship toward this profile. */
   relationship: followRelationshipSchema,
   stats: watchStatsSchema,
+  cinephileOrder: cinephileOrderSchema,
   favorites: z.array(titleSummarySchema),
   /** True only for the profile owner viewing their own page. */
   isOwnProfile: z.boolean(),

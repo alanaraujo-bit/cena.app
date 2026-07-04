@@ -1,5 +1,6 @@
 import type {
   AddFavoriteInput,
+  CinephileOrder,
   PublicProfile,
   TitleSummary,
   UpdateProfileInput,
@@ -8,6 +9,7 @@ import type {
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
 import { getFollowCounts, getRelationship, isMutual } from './followService';
+import { getCinephileOrder } from './icgService';
 import { ensureTitleCached } from './watchService';
 
 /** A user is considered "online" if active within this window. */
@@ -132,6 +134,15 @@ const EMPTY_STATS: WatchStats = {
   episodesWatched: 0,
 };
 
+const EMPTY_CINEPHILE_ORDER: CinephileOrder = {
+  rank: 'espectador',
+  icg: 0,
+  axes: { volume: 0, diversidade: 0, profundidade: 0, consistencia: 0 },
+  weakestAxis: 'volume',
+  nextStepHint: '',
+  calculatedAt: new Date(0).toISOString(),
+};
+
 export async function getPublicProfile(
   username: string,
   viewerId: string,
@@ -173,14 +184,16 @@ export async function getPublicProfile(
       name: user.name,
       bio: null,
       stats: EMPTY_STATS,
+      cinephileOrder: EMPTY_CINEPHILE_ORDER,
       favorites: [],
       isRestricted: true,
     };
   }
 
-  const [stats, favorites] = await Promise.all([
+  const [stats, favorites, cinephileOrder] = await Promise.all([
     getWatchStats(user.id),
     listFavorites(user.id),
+    getCinephileOrder(user.id),
   ]);
 
   return {
@@ -188,6 +201,7 @@ export async function getPublicProfile(
     name: user.name,
     bio: user.bio,
     stats,
+    cinephileOrder,
     favorites,
     isRestricted: false,
   };

@@ -7,6 +7,7 @@ import {
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
 import { createActivity } from './activityService';
+import { recordRankingEvent } from './rankingService';
 import { titleDetail } from './titleService';
 
 /** Days before a cached Title is considered stale and refetched from TMDB. */
@@ -79,7 +80,14 @@ export async function setWatchState(
 
   // Clearing state removes the entry entirely.
   if (input.state === null) {
+    const removed = await prisma.watchEntry.findUnique({
+      where: { userId_titleId: { userId, titleId } },
+      select: { state: true },
+    });
     await prisma.watchEntry.deleteMany({ where: { userId, titleId } });
+    if (removed?.state === 'assistido') {
+      await recordRankingEvent(userId, 'remove', title);
+    }
     return { watchState: null, rating: null, watchedAt: null };
   }
 
@@ -100,10 +108,16 @@ export async function setWatchState(
     select: { state: true, rating: true, watchedAt: true },
   });
 
-  // Feed activity: only on meaningful transitions, never on a no-op re-save.
+  // Feed activity + ranking ledger: only on meaningful transitions, never on a
+  // no-op re-save.
   const previousState = existing?.state ?? null;
   if (isWatched && previousState !== 'assistido') {
     await createActivity(userId, 'watched', titleId);
+    await recordRankingEvent(userId, 'add', title);
+  }
+  if (!isWatched && previousState === 'assistido') {
+    // Left the watched state for assistindo/para_assistir — reverse the ledger.
+    await recordRankingEvent(userId, 'remove', title);
   }
   if (input.state === 'para_assistir' && previousState !== 'para_assistir') {
     await createActivity(userId, 'want_to_watch', titleId);

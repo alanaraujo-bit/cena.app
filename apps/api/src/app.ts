@@ -13,6 +13,7 @@ import { followRoutes } from './routes/follow';
 import { healthRoutes } from './routes/health';
 import { onboardingRoutes } from './routes/onboarding';
 import { profileRoutes } from './routes/profile';
+import { rankingRoutes } from './routes/ranking';
 import { titleRoutes } from './routes/titles';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -48,6 +49,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(followRoutes);
       await v1.register(feedRoutes);
       await v1.register(activityRoutes);
+      await v1.register(rankingRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );

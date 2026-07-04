@@ -3,6 +3,7 @@ import type { PublicProfile } from '@cena/shared';
 import { AvatarWithFrame, GlassCard, PosterCard, StatTile, ThemedText } from '@/design-system';
 import { FollowButton } from '@/features/follow/FollowButton';
 import { useTheme } from '@/theme';
+import { CinephileOrderCard } from './CinephileOrderCard';
 
 interface ProfileViewProps {
   profile: PublicProfile;
@@ -61,6 +62,8 @@ export function ProfileView({ profile, onOpenTitle, headerExtra }: ProfileViewPr
         </GlassCard>
       ) : (
         <>
+          <CinephileOrderCard order={profile.cinephileOrder} />
+
           <View style={{ flexDirection: 'row', gap: theme.spacing.md }}>
             <StatTile label="Assistidos" value={String(profile.stats.watchedCount)} />
             <StatTile label="Seguidores" value={String(profile.followersCount)} />

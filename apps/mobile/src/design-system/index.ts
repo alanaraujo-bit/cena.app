@@ -4,6 +4,7 @@ export { GlassCard } from './GlassCard';
 export { PosterCard } from './PosterCard';
 export { AvatarWithFrame } from './AvatarWithFrame';
 export { StatTile } from './StatTile';
+export { ProgressAxis } from './ProgressAxis';
 export { PrimaryButton } from './PrimaryButton';
 export { GlassTextField } from './GlassTextField';
 export { GlassTabBar } from './GlassTabBar';

@@ -51,6 +51,8 @@ model User {
   comments     Comment[]
   following    Follow[] @relation("Following")
   followers    Follow[] @relation("Followers")
+  cinephileOrder  CinephileOrder?
+  rankingEvents   RankingEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -271,4 +273,67 @@ model Comment {
   createdAt  DateTime @default(now())
 
   @@index([activityId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Gamification — Ordem Cinéfila
+// ---------------------------------------------------------------------------
+
+enum CinephileRank {
+  espectador
+  apreciador
+  cinetico
+  cinefilo
+  curador
+  arquiteto
+}
+
+enum IcgAxis {
+  volume
+  diversidade
+  profundidade
+  consistencia
+}
+
+/// Cached ICG result (brief §5.5). Recomputed lazily on a cache window rather
+/// than on every profile view; rankSince backs the rate-limited rank-change
+/// rule (promote/demote at most one step per recompute).
+model CinephileOrder {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rank   CinephileRank @default(espectador)
+  icg    Float         @default(0)
+
+  volumeScore       Float @default(0)
+  diversityScore    Float @default(0)
+  depthScore        Float @default(0)
+  consistencyScore  Float @default(0)
+  weakestAxis       IcgAxis @default(volume)
+
+  rankSince   DateTime @default(now())
+  calculatedAt DateTime @default(now())
+}
+
+enum RankingEventType {
+  add
+  remove
+}
+
+/// Append-only consumption ledger (brief §5.7). Each watched/unwatched action
+/// emits a signed-by-type delta, enabling windowed leaderboards (semana/mês/
+/// todos) and clean auditing/reversal — never mutate a counter directly.
+model RankingEvent {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           RankingEventType
+  minutesDelta   Int              @default(0)
+  moviesDelta    Int              @default(0)
+  episodesDelta  Int              @default(0)
+  createdAt      DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
