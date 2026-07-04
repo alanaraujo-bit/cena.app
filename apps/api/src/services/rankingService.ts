@@ -67,7 +67,14 @@ export async function getLeaderboard(
 
   const users = await prisma.user.findMany({
     where: { id: { in: [...neededIds] } },
-    select: { id: true, username: true, name: true, avatarUrl: true, cinephileOrder: { select: { rank: true } } },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      avatarUrl: true,
+      activeFrame: { select: { key: true, effect: true, colors: true } },
+      cinephileOrder: { select: { rank: true } },
+    },
   });
   const userMap = new Map(users.map((u) => [u.id, u]));
 
@@ -80,6 +87,7 @@ export async function getLeaderboard(
       username: user.username,
       name: user.name,
       avatarUrl: user.avatarUrl,
+      activeFrame: user.activeFrame,
       rank: (user.cinephileOrder?.rank ?? 'espectador') as LeaderboardEntry['rank'],
       totalMinutes: Math.max(0, totalsForUser.minutes),
       moviesWatched: Math.max(0, totalsForUser.movies),

@@ -147,7 +147,10 @@ export async function getPublicProfile(
   username: string,
   viewerId: string,
 ): Promise<PublicProfile> {
-  const user = await prisma.user.findUnique({ where: { username: username.toLowerCase() } });
+  const user = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    include: { activeFrame: { select: { key: true, effect: true, colors: true } } },
+  });
   if (!user) throw AppError.notFound('Perfil não encontrado.');
 
   const isOwnProfile = user.id === viewerId;
@@ -169,7 +172,7 @@ export async function getPublicProfile(
   const base = {
     username: user.username,
     avatarUrl: user.avatarUrl,
-    activeFrameId: user.activeFrameId,
+    activeFrame: user.activeFrame,
     online,
     privacyMode: user.privacyMode,
     followersCount: counts.followers,

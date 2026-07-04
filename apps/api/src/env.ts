@@ -33,6 +33,10 @@ const envSchema = z.object({
   R2_BUCKET: z.string().optional(),
   REVENUECAT_WEBHOOK_SECRET: z.string().optional(),
 
+  /** The operator's own account — owns every frame and is the only account
+   * allowed to gift staff-tier frames to others (brief §5.6). */
+  FOUNDER_EMAIL: z.string().email().optional(),
+
   CORS_ORIGIN: z.string().default('*'),
 });
 

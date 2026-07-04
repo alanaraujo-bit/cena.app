@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CINEPHILE_RANKS, ICG_AXES } from '../constants/ranks';
 import { usernameSchema } from './common';
+import { activeFrameSummarySchema } from './frames';
 
 export const cinephileRankSchema = z.enum(CINEPHILE_RANKS);
 export const icgAxisSchema = z.enum(ICG_AXES);
@@ -33,6 +34,7 @@ export const leaderboardEntrySchema = z.object({
   username: usernameSchema,
   name: z.string(),
   avatarUrl: z.string().url().nullable(),
+  activeFrame: activeFrameSummarySchema.nullable(),
   rank: cinephileRankSchema,
   totalMinutes: z.number().int(),
   moviesWatched: z.number().int(),

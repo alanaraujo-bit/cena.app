@@ -19,6 +19,8 @@ function textFor(item: NotificationItem): string {
       return item.commentPreview
         ? `${item.actor.name} comentou: "${item.commentPreview}"`
         : `${item.actor.name} comentou na sua atividade`;
+    case 'frame_gift':
+      return `${item.actor.name} te presenteou com a moldura "${item.frame?.name}" 🎁`;
     default:
       return `${item.actor.name} interagiu com você`;
   }
@@ -31,7 +33,8 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
 
   const handlePress = () => {
     if (!item.read) markRead.mutate(item.id);
-    if (item.activity?.title) router.push(`/title/${item.activity.title.key}`);
+    if (item.type === 'frame_gift') router.push('/molduras');
+    else if (item.activity?.title) router.push(`/title/${item.activity.title.key}`);
     else router.push(`/user/${item.actor.username}`);
   };
 
@@ -47,7 +50,7 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
         backgroundColor: item.read ? 'transparent' : theme.colors.glass.overlay,
       }}
     >
-      <AvatarWithFrame avatarUrl={item.actor.avatarUrl} name={item.actor.name} size={40} />
+      <AvatarWithFrame avatarUrl={item.actor.avatarUrl} name={item.actor.name} size={40} frame={item.actor.activeFrame} />
       <View style={{ flex: 1 }}>
         <ThemedText variant="callout">{textFor(item)}</ThemedText>
         <ThemedText variant="micro" color="tertiary">

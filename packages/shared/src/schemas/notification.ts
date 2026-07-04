@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NOTIFICATION_TYPES } from '../constants/enums';
 import { idSchema, paginatedSchema } from './common';
+import { frameEffectSchema } from './frames';
 import { activityAuthorSchema } from './social';
 import { titleSummarySchema } from './titles';
 
@@ -13,6 +14,7 @@ export const supportedNotificationTypeSchema = z.enum([
   'new_follower',
   'follow_request',
   'follow_accepted',
+  'frame_gift',
 ]);
 export type SupportedNotificationType = z.infer<typeof supportedNotificationTypeSchema>;
 
@@ -29,6 +31,14 @@ export const notificationItemSchema = z.object({
     })
     .nullable(),
   commentPreview: z.string().nullable(),
+  frame: z
+    .object({
+      key: z.string(),
+      name: z.string(),
+      effect: frameEffectSchema,
+      colors: z.array(z.string()),
+    })
+    .nullable(),
 });
 export type NotificationItem = z.infer<typeof notificationItemSchema>;
 

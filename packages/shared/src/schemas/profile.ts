@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { displayNameSchema, usernameSchema } from './common';
+import { activeFrameSummarySchema } from './frames';
 import { cinephileOrderSchema } from './ranking';
 import { followRelationshipSchema, privacyModeSchema } from './social';
 import { titleKeySchema, titleSummarySchema } from './titles';
@@ -26,8 +27,7 @@ export const publicProfileSchema = z.object({
   name: z.string(),
   bio: z.string().nullable(),
   avatarUrl: z.string().url().nullable(),
-  /** Understated default frame today; real rarity/animated frames land later. */
-  activeFrameId: z.string().nullable(),
+  activeFrame: activeFrameSummarySchema.nullable(),
   /** Derived from lastActiveAt — a heartbeat, not a live socket. */
   online: z.boolean(),
   privacyMode: privacyModeSchema,

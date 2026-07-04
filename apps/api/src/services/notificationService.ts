@@ -3,11 +3,19 @@ import type { NotificationItem, NotificationsResponse, SupportedNotificationType
 import { prisma } from '../db';
 import { sendExpoPushNotifications } from '../lib/push';
 
-const actorSelect = { username: true, name: true, avatarUrl: true } satisfies Prisma.UserSelect;
+const activeFrameSelect = { key: true, effect: true, colors: true } satisfies Prisma.FrameSelect;
+
+const actorSelect = {
+  username: true,
+  name: true,
+  avatarUrl: true,
+  activeFrame: { select: activeFrameSelect },
+} satisfies Prisma.UserSelect;
 
 const notificationInclude = {
   actor: { select: actorSelect },
   activity: { select: { id: true, title: true } },
+  frame: { select: { key: true, name: true, effect: true, colors: true } },
 } satisfies Prisma.NotificationInclude;
 
 type NotificationRow = Prisma.NotificationGetPayload<{ include: typeof notificationInclude }>;
@@ -39,6 +47,7 @@ function toNotificationItem(row: NotificationRow): NotificationItem {
         }
       : null,
     commentPreview: row.commentPreview,
+    frame: row.frame,
   };
 }
 
@@ -46,6 +55,7 @@ function pushCopyFor(
   type: SupportedNotificationType,
   actorName: string,
   commentPreview?: string | null,
+  frameName?: string | null,
 ): { title: string; body: string } {
   switch (type) {
     case 'new_follower':
@@ -61,6 +71,11 @@ function pushCopyFor(
         title: 'Novo comentário',
         body: commentPreview ? `${actorName}: "${commentPreview}"` : `${actorName} comentou na sua atividade.`,
       };
+    case 'frame_gift':
+      return {
+        title: 'Moldura de presente 🎁',
+        body: `${actorName} te presenteou com a moldura "${frameName}"!`,
+      };
   }
 }
 
@@ -70,14 +85,18 @@ interface CreateNotificationInput {
   type: SupportedNotificationType;
   activityId?: string;
   commentPreview?: string;
+  frameId?: string;
 }
 
 /** Persists the in-app notification, then best-effort fans it out as a push. */
 export async function createNotification(input: CreateNotificationInput): Promise<void> {
   if (input.recipientId === input.actorId) return;
 
-  const [actor] = await Promise.all([
+  const [actor, frame] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: input.actorId }, select: { name: true } }),
+    input.frameId
+      ? prisma.frame.findUnique({ where: { id: input.frameId }, select: { name: true } })
+      : Promise.resolve(null),
   ]);
 
   await prisma.notification.create({
@@ -87,6 +106,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
       type: input.type,
       activityId: input.activityId,
       commentPreview: input.commentPreview,
+      frameId: input.frameId,
     },
   });
 
@@ -96,7 +116,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
   });
   if (tokens.length === 0) return;
 
-  const { title, body } = pushCopyFor(input.type, actor.name, input.commentPreview);
+  const { title, body } = pushCopyFor(input.type, actor.name, input.commentPreview, frame?.name);
   await sendExpoPushNotifications(
     tokens.map((t) => ({ to: t.token, title, body, data: { type: input.type } })),
   );

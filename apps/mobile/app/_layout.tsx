@@ -42,6 +42,7 @@ function RootNavigator() {
       <Stack.Screen name="title/[key]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="user/[username]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="notificacoes" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="molduras" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen
         name="log"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}

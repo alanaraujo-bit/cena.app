@@ -37,12 +37,17 @@ export const NOTIFICATION_TYPES = [
   'follow_accepted',
   'profile_interaction',
   'versus_vote',
+  'frame_gift',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** Profile frame rarity tiers. */
 export const FRAME_RARITIES = ['comum', 'especial', 'lendario', 'staff'] as const;
 export type FrameRarity = (typeof FRAME_RARITIES)[number];
+
+/** How a frame was unlocked/granted — drives the "de onde veio" flair in the UI. */
+export const FRAME_SOURCES = ['starter', 'rank_unlock', 'founder_gift'] as const;
+export type FrameSource = (typeof FRAME_SOURCES)[number];
 
 /** Animated frame effect kinds (rendered via Reanimated, not GIFs). */
 export const FRAME_EFFECTS = [

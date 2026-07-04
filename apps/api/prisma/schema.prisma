@@ -37,8 +37,9 @@ model User {
   avatarUrl    String?
   bio          String?
 
-  // Gamification (populated in later milestones).
+  // Gamification.
   activeFrameId String?
+  activeFrame   Frame?  @relation("ActiveFrame", fields: [activeFrameId], references: [id], onDelete: SetNull)
 
   privacyMode PrivacyMode @default(publico)
 
@@ -56,6 +57,8 @@ model User {
   notificationsReceived Notification[] @relation("NotificationRecipient")
   notificationsCaused  Notification[] @relation("NotificationActor")
   pushTokens   PushToken[]
+  ownedFrames   UserFrame[] @relation("FrameOwner")
+  giftedFrames  UserFrame[] @relation("FrameGiftedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -358,6 +361,7 @@ enum NotificationType {
   follow_accepted
   profile_interaction
   versus_vote
+  frame_gift
 }
 
 /// One row per in-app notification. Denormalizes the comment body at creation
@@ -374,6 +378,9 @@ model Notification {
   activityId  String?
   activity    Activity?        @relation(fields: [activityId], references: [id], onDelete: Cascade)
   commentPreview String?
+
+  frameId String?
+  frame   Frame?  @relation(fields: [frameId], references: [id], onDelete: Cascade)
 
   read      Boolean  @default(false)
   readAt    DateTime?
@@ -396,5 +403,78 @@ model PushToken {
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Molduras (avatar frames)
+// ---------------------------------------------------------------------------
+
+/// Mirrors the shared FRAME_RARITIES enum.
+enum FrameRarity {
+  comum
+  especial
+  lendario
+  staff
+}
+
+/// Mirrors the shared FRAME_EFFECTS enum — rendered via Reanimated on the
+/// client, never GIFs/video assets.
+enum FrameEffect {
+  none
+  glow
+  pulse
+  rotate
+  shimmer
+  orbital
+  prismatic
+  scanline
+}
+
+/// How a UserFrame row was acquired.
+enum FrameSource {
+  starter
+  rank_unlock
+  founder_gift
+}
+
+/// The frame catalog. `unlockRank` gates rank-based auto-unlocks (null for the
+/// starter frame and the founder-exclusive "staff" frames, which are only
+/// ever granted directly). The founder account (brief: only the operator's
+/// own account) is treated as owning every frame regardless of UserFrame rows
+/// — see frameService.isFounder — and is the only account allowed to gift
+/// staff frames to other users.
+model Frame {
+  id          String        @id @default(cuid())
+  key         String        @unique
+  name        String
+  description String
+  rarity      FrameRarity
+  effect      FrameEffect
+  colors      String[]      @default([])
+  unlockRank  CinephileRank?
+
+  owners        UserFrame[]
+  activeFor     User[]         @relation("ActiveFrame")
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+}
+
+/// One row per (user, frame) unlock/grant — the user's frame inventory.
+model UserFrame {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("FrameOwner", fields: [userId], references: [id], onDelete: Cascade)
+  frameId String
+  frame   Frame @relation(fields: [frameId], references: [id], onDelete: Cascade)
+
+  source     FrameSource
+  giftedById String?
+  giftedBy   User?       @relation("FrameGiftedBy", fields: [giftedById], references: [id], onDelete: SetNull)
+
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, frameId])
   @@index([userId])
 }

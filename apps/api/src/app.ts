@@ -10,6 +10,7 @@ import { activityRoutes } from './routes/activities';
 import { authRoutes } from './routes/auth';
 import { feedRoutes } from './routes/feed';
 import { followRoutes } from './routes/follow';
+import { frameRoutes } from './routes/frames';
 import { healthRoutes } from './routes/health';
 import { notificationRoutes } from './routes/notifications';
 import { onboardingRoutes } from './routes/onboarding';
@@ -52,6 +53,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(activityRoutes);
       await v1.register(rankingRoutes);
       await v1.register(notificationRoutes);
+      await v1.register(frameRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );

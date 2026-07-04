@@ -39,7 +39,7 @@ export function ActivityFeedItem({ item }: { item: ActivityItem }) {
         onPress={() => router.push(`/user/${item.user.username}`)}
         hitSlop={4}
       >
-        <AvatarWithFrame avatarUrl={item.user.avatarUrl} name={item.user.name} size={36} />
+        <AvatarWithFrame avatarUrl={item.user.avatarUrl} name={item.user.name} size={36} frame={item.user.activeFrame} />
         <View style={{ flex: 1 }}>
           <ThemedText variant="callout">
             <ThemedText variant="subheadline">{item.user.name}</ThemedText> {verbFor(item)}

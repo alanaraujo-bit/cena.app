@@ -36,6 +36,8 @@ export default function ProfileScreen() {
         </GlassCard>
       )}
 
+      <PrimaryButton label="Minhas molduras" variant="glass" onPress={() => router.push('/molduras')} />
+
       {profile.data?.privacyMode === 'privado' ? <PendingRequests /> : null}
 
       <GlassCard>

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ACTIVITY_TYPES, PRIVACY_MODES } from '../constants/enums';
 import { idSchema, paginatedSchema } from './common';
+import { activeFrameSummarySchema } from './frames';
 import { titleSummarySchema } from './titles';
 
 export const activityTypeSchema = z.enum(ACTIVITY_TYPES);
@@ -12,6 +13,7 @@ export const activityAuthorSchema = z.object({
   username: z.string(),
   name: z.string(),
   avatarUrl: z.string().url().nullable(),
+  activeFrame: activeFrameSummarySchema.nullable(),
 });
 
 export const activityItemSchema = z.object({

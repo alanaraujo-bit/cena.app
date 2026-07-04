@@ -29,7 +29,7 @@ export function ProfileView({ profile, onOpenTitle, headerExtra }: ProfileViewPr
             avatarUrl={profile.avatarUrl}
             name={profile.name}
             online={profile.online}
-            frameId={profile.activeFrameId}
+            frame={profile.activeFrame}
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <ThemedText variant="headline">{profile.name}</ThemedText>

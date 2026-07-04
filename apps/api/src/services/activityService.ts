@@ -23,8 +23,15 @@ export async function createActivity(
   });
 }
 
+const authorSelect = {
+  username: true,
+  name: true,
+  avatarUrl: true,
+  activeFrame: { select: { key: true, effect: true, colors: true } },
+} satisfies Prisma.UserSelect;
+
 const activityInclude = {
-  user: { select: { username: true, name: true, avatarUrl: true } },
+  user: { select: authorSelect },
   title: true,
   _count: { select: { likes: true, comments: true } },
 } satisfies Prisma.ActivityInclude;
@@ -129,7 +136,7 @@ export async function addComment(
   const ownerId = await getActivityOwnerId(activityId);
   const comment = await prisma.comment.create({
     data: { userId, activityId, body: input.body },
-    include: { user: { select: { username: true, name: true, avatarUrl: true } } },
+    include: { user: { select: authorSelect } },
   });
   await createNotification({
     recipientId: ownerId,
@@ -151,7 +158,7 @@ export async function listComments(activityId: string): Promise<CommentDto[]> {
   const rows = await prisma.comment.findMany({
     where: { activityId },
     orderBy: { createdAt: 'asc' },
-    include: { user: { select: { username: true, name: true, avatarUrl: true } } },
+    include: { user: { select: authorSelect } },
   });
   return rows.map((c) => ({
     id: c.id,

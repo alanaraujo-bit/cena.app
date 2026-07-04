@@ -79,7 +79,7 @@ function LeaderboardRow({ entry, onPress }: { entry: LeaderboardEntry; onPress: 
           <ThemedText variant="subheadline" color="tertiary" style={{ width: 28 }}>
             {entry.position}
           </ThemedText>
-          <AvatarWithFrame avatarUrl={entry.avatarUrl} name={entry.name} size={40} />
+          <AvatarWithFrame avatarUrl={entry.avatarUrl} name={entry.name} size={40} frame={entry.activeFrame} />
           <View style={{ flex: 1 }}>
             <ThemedText variant="callout">{entry.name}</ThemedText>
             <ThemedText variant="caption" color="accent">
