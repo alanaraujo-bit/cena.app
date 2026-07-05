@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
 import type { PublicProfile } from '@cena/shared';
-import { AvatarWithFrame, GlassCard, PosterCard, StatTile, ThemedText } from '@/design-system';
+import { AvatarWithFrame, GlassCard, PosterCard, PremiumBadge, StatTile, ThemedText } from '@/design-system';
 import { FollowButton } from '@/features/follow/FollowButton';
 import { useTheme } from '@/theme';
 import { CinephileOrderCard } from './CinephileOrderCard';
@@ -33,9 +33,12 @@ export function ProfileView({ profile, onOpenTitle, headerExtra }: ProfileViewPr
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <ThemedText variant="headline">{profile.name}</ThemedText>
-            <ThemedText variant="callout" color="secondary">
-              @{profile.username}
-            </ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <ThemedText variant="callout" color="secondary">
+                @{profile.username}
+              </ThemedText>
+              {profile.isPremium ? <PremiumBadge size={14} /> : null}
+            </View>
           </View>
         </View>
 

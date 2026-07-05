@@ -45,6 +45,7 @@ const EFFECT_DURATIONS: Record<FrameEffect, number> = {
   orbital: 3200,
   prismatic: 3600,
   scanline: 1600,
+  aurora: 4200,
 };
 
 export function AvatarWithFrame({
@@ -119,7 +120,7 @@ export function AvatarWithFrame({
 
   return (
     <View style={{ width: size, height: size }}>
-      {effect === 'glow' ? (
+      {effect === 'glow' || effect === 'aurora' ? (
         <Animated.View
           pointerEvents="none"
           style={[
@@ -155,8 +156,8 @@ export function AvatarWithFrame({
           },
           effect === 'rotate' || effect === 'shimmer' ? { borderColor: secondary, borderTopColor: primary } : null,
           effect === 'pulse' ? pulseStyle : null,
-          effect === 'rotate' || effect === 'shimmer' ? spinStyle : null,
-          effect === 'prismatic' ? prismaticStyle : null,
+          effect === 'rotate' || effect === 'shimmer' || effect === 'aurora' ? spinStyle : null,
+          effect === 'prismatic' || effect === 'aurora' ? prismaticStyle : null,
         ]}
       >
         <View

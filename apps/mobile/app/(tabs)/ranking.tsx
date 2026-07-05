@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import type { LeaderboardEntry, RankingWindow } from '@cena/shared';
 import { CINEPHILE_RANK_LABELS } from '@cena/shared';
-import { AvatarWithFrame, GlassCard, Screen, SegmentedControl, ThemedText } from '@/design-system';
+import { AvatarWithFrame, GlassCard, PremiumBadge, Screen, SegmentedControl, ThemedText } from '@/design-system';
 import { useLeaderboard } from '@/features/ranking/hooks';
 import { useStrings } from '@/i18n';
 import { useTheme } from '@/theme';
@@ -81,7 +81,10 @@ function LeaderboardRow({ entry, onPress }: { entry: LeaderboardEntry; onPress: 
           </ThemedText>
           <AvatarWithFrame avatarUrl={entry.avatarUrl} name={entry.name} size={40} frame={entry.activeFrame} />
           <View style={{ flex: 1 }}>
-            <ThemedText variant="callout">{entry.name}</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <ThemedText variant="callout">{entry.name}</ThemedText>
+              {entry.isPremium ? <PremiumBadge size={12} /> : null}
+            </View>
             <ThemedText variant="caption" color="accent">
               {CINEPHILE_RANK_LABELS[entry.rank]}
             </ThemedText>

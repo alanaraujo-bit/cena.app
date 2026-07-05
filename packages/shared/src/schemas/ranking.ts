@@ -35,6 +35,7 @@ export const leaderboardEntrySchema = z.object({
   name: z.string(),
   avatarUrl: z.string().url().nullable(),
   activeFrame: activeFrameSummarySchema.nullable(),
+  isPremium: z.boolean(),
   rank: cinephileRankSchema,
   totalMinutes: z.number().int(),
   moviesWatched: z.number().int(),

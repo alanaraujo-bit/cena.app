@@ -21,6 +21,7 @@ export const activityAuthorSchema = z.object({
   name: z.string(),
   avatarUrl: z.string().url().nullable(),
   activeFrame: activeFrameSummarySchema.nullable(),
+  isPremium: z.boolean(),
 });
 
 export const activityItemSchema = z.object({

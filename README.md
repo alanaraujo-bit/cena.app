@@ -77,7 +77,7 @@ eas build --profile development --platform ios
 7. ✅ **Notificações** (in-app + push).
 8. ✅ **Molduras** (biblioteca, presente, animadas).
 9. ✅ **Filme Versus**.
-10. RevenueCat + paywall + premium.
+10. ✅ **RevenueCat + paywall + premium**.
 11. Assets de loja + submissão.
 
 ## Verificação

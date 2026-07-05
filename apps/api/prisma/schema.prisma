@@ -43,6 +43,13 @@ model User {
 
   privacyMode PrivacyMode @default(publico)
 
+  // Premium (RevenueCat). Cached/derived from Subscription + webhook events —
+  // never the source of truth by itself (see subscriptionService).
+  entitlement       EntitlementTier @default(free)
+  premiumExpiresAt  DateTime?
+  subscription      Subscription?
+  revenueCatEvents  RevenueCatEvent[]
+
   onboarding   OnboardingCompletion?
   refreshTokens RefreshToken[]
   watchEntries WatchEntry[]
@@ -426,6 +433,7 @@ enum FrameRarity {
   especial
   lendario
   staff
+  premium
 }
 
 /// Mirrors the shared FRAME_EFFECTS enum — rendered via Reanimated on the
@@ -439,6 +447,7 @@ enum FrameEffect {
   orbital
   prismatic
   scanline
+  aurora
 }
 
 /// How a UserFrame row was acquired.
@@ -463,6 +472,10 @@ model Frame {
   effect      FrameEffect
   colors      String[]      @default([])
   unlockRank  CinephileRank?
+  /// Non-null only for Premium-exclusive frames. Ownership is computed live
+  /// from User.entitlement (like the founder bypass) — never a stored
+  /// UserFrame row, since access must lapse if the subscription lapses.
+  unlockEntitlement EntitlementTier?
 
   owners        UserFrame[]
   activeFor     User[]         @relation("ActiveFrame")
@@ -538,4 +551,49 @@ model VersusVote {
 
   @@unique([versusId, userId])
   @@index([versusId])
+}
+
+// ---------------------------------------------------------------------------
+// Premium (RevenueCat)
+// ---------------------------------------------------------------------------
+
+enum EntitlementTier {
+  free
+  premium
+}
+
+/// Cached current subscription state (one per user) — mirrors the latest
+/// RevenueCat webhook/client sync, same cache-vs-ledger split as
+/// CinephileOrder/RankingEvent. `tier` can lag User.entitlement by nothing
+/// (they're written together); kept as its own model since it carries fields
+/// (productId/store/willRenew) that don't belong on User.
+model Subscription {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tier      EntitlementTier @default(free)
+  productId String
+  store     String
+  willRenew Boolean         @default(false)
+  expiresAt DateTime?
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Append-only ledger of processed RevenueCat webhook deliveries. `rcEventId`
+/// (RevenueCat's own event.id) is unique so redelivered webhooks — RevenueCat
+/// retries on any non-2xx — are detected and ignored instead of re-applied.
+model RevenueCatEvent {
+  id          String   @id @default(cuid())
+  rcEventId   String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String
+  productId   String?
+  store       String?
+  environment String
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

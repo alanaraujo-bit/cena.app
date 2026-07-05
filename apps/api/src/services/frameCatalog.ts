@@ -1,4 +1,4 @@
-import type { CinephileRank, FrameEffect, FrameRarity } from '@cena/shared';
+import type { CinephileRank, EntitlementTier, FrameEffect, FrameRarity } from '@cena/shared';
 
 export interface FrameDefinition {
   key: string;
@@ -7,8 +7,10 @@ export interface FrameDefinition {
   rarity: FrameRarity;
   effect: FrameEffect;
   colors: string[];
-  /** Null for the starter frame and the founder-exclusive staff frames. */
+  /** Null for the starter frame, founder-exclusive staff frames, and Premium frames. */
   unlockRank: CinephileRank | null;
+  /** Non-null only for Premium-exclusive frames — ownership is computed live, never stored. */
+  unlockEntitlement: EntitlementTier | null;
 }
 
 /** The starter frame every account owns from day one. */
@@ -17,7 +19,8 @@ export const STARTER_FRAME_KEY = 'classico';
 /**
  * The frame catalog (brief §5.6). Rank-gated frames unlock automatically as
  * the Ordem Cinéfila rank rises (see frameService); staff frames are only
- * ever granted directly by the founder account via gifting.
+ * ever granted directly by the founder account via gifting; Premium frames
+ * are owned live for as long as the subscription is active (frameService).
  */
 export const FRAME_CATALOG: FrameDefinition[] = [
   {
@@ -28,6 +31,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'none',
     colors: [],
     unlockRank: null,
+    unlockEntitlement: null,
   },
   {
     key: 'brilho-sutil',
@@ -37,6 +41,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'glow',
     colors: ['#7dd3fc', '#38bdf8'],
     unlockRank: 'apreciador',
+    unlockEntitlement: null,
   },
   {
     key: 'pulso-cinefilo',
@@ -46,6 +51,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'pulse',
     colors: ['#a78bfa', '#7c3aed'],
     unlockRank: 'cinetico',
+    unlockEntitlement: null,
   },
   {
     key: 'giro-de-cena',
@@ -55,6 +61,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'rotate',
     colors: ['#fb7185', '#f43f5e'],
     unlockRank: 'cinefilo',
+    unlockEntitlement: null,
   },
   {
     key: 'cintilante',
@@ -64,6 +71,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'shimmer',
     colors: ['#fbbf24', '#f59e0b'],
     unlockRank: 'curador',
+    unlockEntitlement: null,
   },
   {
     key: 'orbita-cinefila',
@@ -73,6 +81,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'orbital',
     colors: ['#34d399', '#059669'],
     unlockRank: 'arquiteto',
+    unlockEntitlement: null,
   },
   {
     key: 'estrela-de-cena',
@@ -82,6 +91,7 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'prismatic',
     colors: ['#f472b6', '#a78bfa', '#38bdf8'],
     unlockRank: null,
+    unlockEntitlement: null,
   },
   {
     key: 'assinatura-cena',
@@ -91,5 +101,26 @@ export const FRAME_CATALOG: FrameDefinition[] = [
     effect: 'scanline',
     colors: ['#e2e8f0', '#94a3b8'],
     unlockRank: null,
+    unlockEntitlement: null,
+  },
+  {
+    key: 'aurora-cinefila',
+    name: 'Aurora Cinéfila',
+    description: 'Um halo de cores em constante transição — exclusiva de quem assina o Premium.',
+    rarity: 'premium',
+    effect: 'aurora',
+    colors: ['#fbbf24', '#a78bfa', '#00d9ff'],
+    unlockRank: null,
+    unlockEntitlement: 'premium',
+  },
+  {
+    key: 'aurora-noturna',
+    name: 'Aurora Noturna',
+    description: 'A variação noturna da Aurora — outra exclusividade Premium.',
+    rarity: 'premium',
+    effect: 'aurora',
+    colors: ['#0099ff', '#ff0080', '#7c3aed'],
+    unlockRank: null,
+    unlockEntitlement: 'premium',
   },
 ];

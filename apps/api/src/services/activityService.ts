@@ -7,6 +7,7 @@ import type {
 } from '@cena/shared';
 import { prisma } from '../db';
 import { AppError } from '../lib/errors';
+import { toAuthorDto } from '../lib/entitlement';
 import { createNotification } from './notificationService';
 import { toTitleSummary } from './titleMapper';
 import { toVersusSummary } from './versusMapper';
@@ -34,6 +35,8 @@ export async function createActivity(userId: string, input: CreateActivityInput)
 }
 
 const authorSelect = {
+  email: true,
+  entitlement: true,
   username: true,
   name: true,
   avatarUrl: true,
@@ -77,7 +80,7 @@ function toActivityItem(
     id: row.id,
     type: row.type,
     createdAt: row.createdAt.toISOString(),
-    user: row.user,
+    user: toAuthorDto(row.user),
     title: row.title ? toTitleSummary(row.title) : null,
     rating: row.rating,
     versus: row.versus ? toVersusSummary(row.versus, viewerId, watchedTitleIds) : null,
@@ -180,7 +183,7 @@ export async function addComment(
     id: comment.id,
     body: comment.body,
     createdAt: comment.createdAt.toISOString(),
-    user: comment.user,
+    user: toAuthorDto(comment.user),
   };
 }
 
@@ -195,6 +198,6 @@ export async function listComments(activityId: string): Promise<CommentDto[]> {
     id: c.id,
     body: c.body,
     createdAt: c.createdAt.toISOString(),
-    user: c.user,
+    user: toAuthorDto(c.user),
   }));
 }

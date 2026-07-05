@@ -3,6 +3,7 @@ export { GlassSurface } from './GlassSurface';
 export { GlassCard } from './GlassCard';
 export { PosterCard } from './PosterCard';
 export { AvatarWithFrame } from './AvatarWithFrame';
+export { PremiumBadge } from './PremiumBadge';
 export { StatTile } from './StatTile';
 export { ProgressAxis } from './ProgressAxis';
 export { PrimaryButton } from './PrimaryButton';

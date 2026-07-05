@@ -5,6 +5,7 @@ import type { PrivacyMode } from '@cena/shared';
 import { AvatarWithFrame, GlassCard, GlassTextField, Icon, PrimaryButton, Screen, SegmentedControl, ThemedText } from '@/design-system';
 import { useAuth } from '@/features/auth';
 import { usePendingRequests, useRespondToRequest } from '@/features/follow/hooks';
+import { usePremiumStatus } from '@/features/premium/hooks';
 import { ProfileView } from '@/features/profile/ProfileView';
 import { useProfile, useUpdateProfile } from '@/features/profile/hooks';
 import { useStrings } from '@/i18n';
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
       )}
 
       <PrimaryButton label="Minhas molduras" variant="glass" onPress={() => router.push('/molduras')} />
+      <PremiumSection />
 
       {profile.data?.privacyMode === 'privado' ? <PendingRequests /> : null}
 
@@ -64,6 +66,43 @@ export default function ProfileScreen() {
 
       <PrimaryButton label="Sair" variant="glass" onPress={() => void signOut()} />
     </Screen>
+  );
+}
+
+function PremiumSection() {
+  const theme = useTheme();
+  const router = useRouter();
+  const status = usePremiumStatus();
+  const isPremium = status.data?.isPremium ?? false;
+
+  return (
+    <GlassCard>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+        <Icon name="diamond" size={22} color={theme.colors.status.warning} />
+        <View style={{ flex: 1 }}>
+          <ThemedText variant="subheadline">{isPremium ? 'Você é Premium' : 'CENA Premium'}</ThemedText>
+          <ThemedText variant="caption" color="secondary">
+            {isPremium
+              ? 'Selo, molduras exclusivas, Versus sem limite e estatísticas avançadas.'
+              : 'Molduras exclusivas, Versus sem limite e estatísticas avançadas.'}
+          </ThemedText>
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md }}>
+        <PrimaryButton
+          label={isPremium ? 'Gerenciar' : 'Assinar'}
+          variant="glass"
+          onPress={() => router.push('/premium')}
+          style={{ flex: 1 }}
+        />
+        <PrimaryButton
+          label="Estatísticas"
+          variant="ghost"
+          onPress={() => router.push('/estatisticas')}
+          style={{ flex: 1 }}
+        />
+      </View>
+    </GlassCard>
   );
 }
 

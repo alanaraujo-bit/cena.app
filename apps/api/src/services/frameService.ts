@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { CINEPHILE_RANKS, type FrameCatalogItem, type FrameLibraryResponse, type GiftFrameInput } from '@cena/shared';
 import { prisma } from '../db';
+import { computeIsPremium } from '../lib/entitlement';
 import { AppError } from '../lib/errors';
 import { isFounderEmail } from '../lib/founder';
 import { STARTER_FRAME_KEY } from './frameCatalog';
@@ -20,6 +21,7 @@ function frameToDto(
     effect: frame.effect,
     colors: frame.colors,
     unlockRank: frame.unlockRank,
+    unlockEntitlement: frame.unlockEntitlement,
     owned: opts.owned,
     active: opts.active,
     source: opts.source as FrameCatalogItem['source'],
@@ -49,12 +51,16 @@ async function grantEligibleRankUnlocks(
 
 export async function listFrames(userId: string): Promise<FrameLibraryResponse> {
   const [user, frames, ownedRows] = await Promise.all([
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true, activeFrameId: true } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { email: true, entitlement: true, activeFrameId: true },
+    }),
     prisma.frame.findMany({ orderBy: { createdAt: 'asc' } }),
     prisma.userFrame.findMany({ where: { userId }, select: { frameId: true, source: true } }),
   ]);
 
   const founder = isFounderEmail(user.email);
+  const isPremium = computeIsPremium(user);
   const ownedMap = new Map(ownedRows.map((r) => [r.frameId, r.source as string]));
 
   if (!founder) {
@@ -72,13 +78,16 @@ export async function listFrames(userId: string): Promise<FrameLibraryResponse> 
   }
 
   return {
-    frames: frames.map((f) =>
-      frameToDto(f, {
-        owned: founder || ownedMap.has(f.id),
+    frames: frames.map((f) => {
+      // Premium frames are never persisted as UserFrame rows — ownership is
+      // computed live from the subscription so it lapses if it's cancelled.
+      const premiumOwned = f.unlockEntitlement === 'premium' && isPremium;
+      return frameToDto(f, {
+        owned: founder || ownedMap.has(f.id) || premiumOwned,
         active: user.activeFrameId === f.id,
         source: founder ? null : (ownedMap.get(f.id) ?? null),
-      }),
-    ),
+      });
+    }),
     canGift: founder,
   };
 }
@@ -86,7 +95,7 @@ export async function listFrames(userId: string): Promise<FrameLibraryResponse> 
 export async function equipFrame(userId: string, frameId: string): Promise<void> {
   const [frame, user] = await Promise.all([
     prisma.frame.findUnique({ where: { id: frameId } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true, entitlement: true } }),
   ]);
   if (!frame) throw AppError.notFound('Moldura não encontrada.');
 
@@ -104,6 +113,11 @@ export async function equipFrame(userId: string, frameId: string): Promise<void>
         const neededIdx = CINEPHILE_RANKS.indexOf(frame.unlockRank as never);
         if (neededIdx > rankIdx) throw AppError.forbidden('Você ainda não desbloqueou essa moldura.');
         await prisma.userFrame.create({ data: { userId, frameId, source: 'rank_unlock' } });
+      } else if (frame.unlockEntitlement === 'premium') {
+        if (!computeIsPremium(user)) {
+          throw new AppError(403, 'premium_required', 'Essa moldura é exclusiva de assinantes Premium.');
+        }
+        // No UserFrame row: ownership stays tied live to the subscription.
       } else {
         throw AppError.forbidden('Você ainda não possui essa moldura.');
       }

@@ -42,7 +42,7 @@ export const NOTIFICATION_TYPES = [
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** Profile frame rarity tiers. */
-export const FRAME_RARITIES = ['comum', 'especial', 'lendario', 'staff'] as const;
+export const FRAME_RARITIES = ['comum', 'especial', 'lendario', 'staff', 'premium'] as const;
 export type FrameRarity = (typeof FRAME_RARITIES)[number];
 
 /** How a frame was unlocked/granted — drives the "de onde veio" flair in the UI. */
@@ -59,6 +59,7 @@ export const FRAME_EFFECTS = [
   'orbital',
   'prismatic',
   'scanline',
+  'aurora',
 ] as const;
 export type FrameEffect = (typeof FRAME_EFFECTS)[number];
 

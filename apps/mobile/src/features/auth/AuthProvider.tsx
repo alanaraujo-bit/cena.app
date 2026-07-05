@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { AuthUser, LoginInput, RegisterInput } from '@cena/shared';
 import { notificationsApi } from '@/features/notifications/api';
 import { getPushTokenIfPermitted } from '@/lib/push';
+import { logOutPurchases } from '@/lib/purchases';
 import { tokenStore } from '@/lib/secureStore';
 import { loginRequest, logoutRequest, meRequest, registerRequest } from './api';
 
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // best-effort — a stale token just stops receiving relevant pushes.
     }
+    await logOutPurchases();
     await logoutRequest();
     setUser(null);
     setStatus('unauthenticated');

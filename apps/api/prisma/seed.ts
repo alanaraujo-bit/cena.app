@@ -13,6 +13,7 @@ async function main() {
         effect: frame.effect,
         colors: frame.colors,
         unlockRank: frame.unlockRank,
+        unlockEntitlement: frame.unlockEntitlement,
       },
     });
   }

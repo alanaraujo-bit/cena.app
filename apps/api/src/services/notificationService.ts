@@ -1,11 +1,14 @@
 import type { Prisma } from '@prisma/client';
 import type { NotificationItem, NotificationsResponse, SupportedNotificationType } from '@cena/shared';
 import { prisma } from '../db';
+import { toAuthorDto } from '../lib/entitlement';
 import { sendExpoPushNotifications } from '../lib/push';
 
 const activeFrameSelect = { key: true, effect: true, colors: true } satisfies Prisma.FrameSelect;
 
 const actorSelect = {
+  email: true,
+  entitlement: true,
   username: true,
   name: true,
   avatarUrl: true,
@@ -27,7 +30,7 @@ function toNotificationItem(row: NotificationRow): NotificationItem {
     type: row.type,
     createdAt: row.createdAt.toISOString(),
     read: row.read,
-    actor: row.actor,
+    actor: toAuthorDto(row.actor),
     activity: row.activity
       ? {
           id: row.activity.id,

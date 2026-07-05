@@ -1,6 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import type { FrameCatalogItem } from '@cena/shared';
-import { AvatarWithFrame, GlassCard, PrimaryButton, ThemedText } from '@/design-system';
+import { AvatarWithFrame, GlassCard, Icon, PrimaryButton, ThemedText } from '@/design-system';
 import { useTheme } from '@/theme';
 
 const RARITY_LABELS: Record<FrameCatalogItem['rarity'], string> = {
@@ -8,6 +8,7 @@ const RARITY_LABELS: Record<FrameCatalogItem['rarity'], string> = {
   especial: 'Especial',
   lendario: 'Lendário',
   staff: 'Exclusivo',
+  premium: 'Premium',
 };
 
 const SOURCE_LABELS: Record<NonNullable<FrameCatalogItem['source']>, string> = {
@@ -21,9 +22,10 @@ interface FrameCardProps {
   onEquip: () => void;
   equipping: boolean;
   onGift?: () => void;
+  onUpgrade?: () => void;
 }
 
-export function FrameCard({ frame, onEquip, equipping, onGift }: FrameCardProps) {
+export function FrameCard({ frame, onEquip, equipping, onGift, onUpgrade }: FrameCardProps) {
   const theme = useTheme();
 
   return (
@@ -57,10 +59,15 @@ export function FrameCard({ frame, onEquip, equipping, onGift }: FrameCardProps)
             disabled={frame.active}
             style={{ flex: 1 }}
           />
+        ) : frame.unlockEntitlement === 'premium' && onUpgrade ? (
+          <PrimaryButton label="Assinar Premium" variant="glass" onPress={onUpgrade} style={{ flex: 1 }} />
         ) : (
-          <ThemedText variant="caption" color="tertiary" style={{ flex: 1, alignSelf: 'center' }}>
-            🔒 Bloqueada
-          </ThemedText>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name="lock" size={14} color={theme.colors.text.tertiary} />
+            <ThemedText variant="caption" color="tertiary">
+              Bloqueada
+            </ThemedText>
+          </View>
         )}
         {onGift ? (
           <PrimaryButton label="Presentear" variant="glass" onPress={onGift} style={{ flex: 1 }} />

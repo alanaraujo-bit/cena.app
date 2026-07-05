@@ -14,8 +14,10 @@ import { frameRoutes } from './routes/frames';
 import { healthRoutes } from './routes/health';
 import { notificationRoutes } from './routes/notifications';
 import { onboardingRoutes } from './routes/onboarding';
+import { premiumRoutes } from './routes/premium';
 import { profileRoutes } from './routes/profile';
 import { rankingRoutes } from './routes/ranking';
+import { revenueCatWebhookRoutes } from './routes/revenuecatWebhook';
 import { titleRoutes } from './routes/titles';
 import { versusRoutes } from './routes/versus';
 
@@ -56,6 +58,8 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(notificationRoutes);
       await v1.register(frameRoutes);
       await v1.register(versusRoutes);
+      await v1.register(premiumRoutes);
+      await v1.register(revenueCatWebhookRoutes);
     },
     { prefix: `/${API_VERSION}` },
   );

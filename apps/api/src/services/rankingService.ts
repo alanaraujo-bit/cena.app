@@ -1,5 +1,6 @@
 import type { LeaderboardEntry, LeaderboardResponse, RankingWindow } from '@cena/shared';
 import { prisma } from '../db';
+import { computeIsPremium } from '../lib/entitlement';
 
 interface TitleDelta {
   mediaType: string;
@@ -72,6 +73,8 @@ export async function getLeaderboard(
       username: true,
       name: true,
       avatarUrl: true,
+      email: true,
+      entitlement: true,
       activeFrame: { select: { key: true, effect: true, colors: true } },
       cinephileOrder: { select: { rank: true } },
     },
@@ -88,6 +91,7 @@ export async function getLeaderboard(
       name: user.name,
       avatarUrl: user.avatarUrl,
       activeFrame: user.activeFrame,
+      isPremium: computeIsPremium(user),
       rank: (user.cinephileOrder?.rank ?? 'espectador') as LeaderboardEntry['rank'],
       totalMinutes: Math.max(0, totalsForUser.minutes),
       moviesWatched: Math.max(0, totalsForUser.movies),

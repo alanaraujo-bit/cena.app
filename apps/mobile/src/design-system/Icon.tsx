@@ -26,7 +26,11 @@ export type IconName =
   | 'star-fill'
   | 'chevron-left'
   | 'play'
-  | 'close';
+  | 'close'
+  | 'diamond'
+  | 'lock'
+  | 'versus'
+  | 'chart';
 
 const MAP: Record<IconName, { sf: SymbolViewProps['name']; ion: keyof typeof Ionicons.glyphMap }> = {
   feed: { sf: 'house', ion: 'home-outline' },
@@ -46,6 +50,10 @@ const MAP: Record<IconName, { sf: SymbolViewProps['name']; ion: keyof typeof Ion
   'chevron-left': { sf: 'chevron.left', ion: 'chevron-back' },
   play: { sf: 'play.fill', ion: 'play' },
   close: { sf: 'xmark', ion: 'close' },
+  diamond: { sf: 'diamond.fill', ion: 'diamond' },
+  lock: { sf: 'lock.fill', ion: 'lock-closed' },
+  versus: { sf: 'arrow.left.arrow.right', ion: 'swap-horizontal' },
+  chart: { sf: 'chart.bar.fill', ion: 'stats-chart' },
 };
 
 interface IconProps {

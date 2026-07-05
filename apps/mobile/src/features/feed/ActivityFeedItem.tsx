@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import type { ActivityItem } from '@cena/shared';
-import { AvatarWithFrame, GlassCard, GlassTextField, Icon, PrimaryButton, ThemedText } from '@/design-system';
+import { AvatarWithFrame, GlassCard, GlassTextField, Icon, PremiumBadge, PrimaryButton, ThemedText } from '@/design-system';
 import { VersusCard } from '@/features/versus/VersusCard';
 import { useTheme } from '@/theme';
 import { useAddComment, useComments, useToggleLike } from './hooks';
@@ -52,9 +52,12 @@ export function ActivityFeedItem({ item }: { item: ActivityItem }) {
               <ThemedText variant="subheadline"> {item.title.title}</ThemedText>
             ) : null}
           </ThemedText>
-          <ThemedText variant="micro" color="tertiary">
-            @{item.user.username}
-          </ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <ThemedText variant="micro" color="tertiary">
+              @{item.user.username}
+            </ThemedText>
+            {item.user.isPremium ? <PremiumBadge size={12} /> : null}
+          </View>
         </View>
       </Pressable>
 

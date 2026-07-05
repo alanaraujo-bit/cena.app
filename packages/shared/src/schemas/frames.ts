@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { CINEPHILE_RANKS } from '../constants/ranks';
 import { FRAME_EFFECTS, FRAME_RARITIES, FRAME_SOURCES } from '../constants/enums';
 import { idSchema, usernameSchema } from './common';
+import { entitlementTierSchema } from './premium';
 
 export const frameRaritySchema = z.enum(FRAME_RARITIES);
 export const frameEffectSchema = z.enum(FRAME_EFFECTS);
@@ -25,6 +26,8 @@ export const frameCatalogItemSchema = z.object({
   effect: frameEffectSchema,
   colors: z.array(z.string()),
   unlockRank: frameUnlockRankSchema.nullable(),
+  /// Non-null only for Premium-exclusive frames — orthogonal to unlockRank.
+  unlockEntitlement: entitlementTierSchema.nullable(),
   owned: z.boolean(),
   active: z.boolean(),
   source: frameSourceSchema.nullable(),

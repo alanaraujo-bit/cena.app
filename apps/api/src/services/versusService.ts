@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
-import type { CreateVersusInput, VersusSummary, VoteVersusInput } from '@cena/shared';
+import { FREE_ACTIVE_VERSUS_LIMIT, type CreateVersusInput, type VersusSummary, type VoteVersusInput } from '@cena/shared';
 import { prisma } from '../db';
+import { computeIsPremium } from '../lib/entitlement';
 import { AppError } from '../lib/errors';
 import { createActivity } from './activityService';
 import { createNotification } from './notificationService';
@@ -28,6 +29,23 @@ async function assertWatchedBoth(userId: string, titleAId: string, titleBId: str
 }
 
 export async function createVersus(creatorId: string, input: CreateVersusInput): Promise<VersusSummary> {
+  const creator = await prisma.user.findUniqueOrThrow({
+    where: { id: creatorId },
+    select: { email: true, entitlement: true },
+  });
+  if (!computeIsPremium(creator)) {
+    const activeCount = await prisma.versus.count({
+      where: { creatorId, closesAt: { gt: new Date() } },
+    });
+    if (activeCount >= FREE_ACTIVE_VERSUS_LIMIT) {
+      throw new AppError(
+        403,
+        'versus_limit_reached',
+        'Free permite só 1 Filme Versus ativo por vez. Assine o Premium para criar sem limite.',
+      );
+    }
+  }
+
   const [titleA, titleB] = await Promise.all([
     ensureTitleCached(input.titleAKey),
     ensureTitleCached(input.titleBKey),

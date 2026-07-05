@@ -28,6 +28,7 @@ export const publicProfileSchema = z.object({
   bio: z.string().nullable(),
   avatarUrl: z.string().url().nullable(),
   activeFrame: activeFrameSummarySchema.nullable(),
+  isPremium: z.boolean(),
   /** Derived from lastActiveAt — a heartbeat, not a live socket. */
   online: z.boolean(),
   privacyMode: privacyModeSchema,

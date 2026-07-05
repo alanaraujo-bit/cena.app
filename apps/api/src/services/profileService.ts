@@ -7,6 +7,7 @@ import type {
   WatchStats,
 } from '@cena/shared';
 import { prisma } from '../db';
+import { computeIsPremium } from '../lib/entitlement';
 import { AppError } from '../lib/errors';
 import { getFollowCounts, getRelationship, isMutual } from './followService';
 import { getCinephileOrder } from './icgService';
@@ -152,6 +153,7 @@ export async function getPublicProfile(
     include: { activeFrame: { select: { key: true, effect: true, colors: true } } },
   });
   if (!user) throw AppError.notFound('Perfil não encontrado.');
+  const isPremium = computeIsPremium(user);
 
   const isOwnProfile = user.id === viewerId;
   const [relationship, counts] = await Promise.all([
@@ -173,6 +175,7 @@ export async function getPublicProfile(
     username: user.username,
     avatarUrl: user.avatarUrl,
     activeFrame: user.activeFrame,
+    isPremium,
     online,
     privacyMode: user.privacyMode,
     followersCount: counts.followers,

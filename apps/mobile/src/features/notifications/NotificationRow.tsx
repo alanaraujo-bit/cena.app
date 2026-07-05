@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import type { NotificationItem } from '@cena/shared';
-import { AvatarWithFrame, ThemedText } from '@/design-system';
+import { AvatarWithFrame, PremiumBadge, ThemedText } from '@/design-system';
 import { useTheme } from '@/theme';
 import { useMarkRead } from './hooks';
 
@@ -56,9 +56,12 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
       <AvatarWithFrame avatarUrl={item.actor.avatarUrl} name={item.actor.name} size={40} frame={item.actor.activeFrame} />
       <View style={{ flex: 1 }}>
         <ThemedText variant="callout">{textFor(item)}</ThemedText>
-        <ThemedText variant="micro" color="tertiary">
-          @{item.actor.username}
-        </ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <ThemedText variant="micro" color="tertiary">
+            @{item.actor.username}
+          </ThemedText>
+          {item.actor.isPremium ? <PremiumBadge size={12} /> : null}
+        </View>
       </View>
       {!item.read ? (
         <View

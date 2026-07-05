@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import type { TitleSummary } from '@cena/shared';
 import { AppBackground, GlassCard, GlassSurface, GlassTextField, Icon, PrimaryButton, ThemedText } from '@/design-system';
+import { ApiRequestError } from '@/lib/api';
 import { TitleResultRow } from '@/features/titles/TitleResultRow';
 import { useMyWatchedTitles } from '@/features/titles/hooks';
 import { useCreateVersus } from '@/features/versus/hooks';
@@ -32,6 +33,9 @@ export default function CreateVersusScreen() {
       { onSuccess: (data) => router.replace(`/versus/${data.id}`) },
     );
   };
+
+  const limitReached =
+    createVersus.error instanceof ApiRequestError && createVersus.error.code === 'versus_limit_reached';
 
   return (
     <AppBackground>
@@ -100,11 +104,20 @@ export default function CreateVersusScreen() {
               />
             </GlassCard>
 
-            <PrimaryButton
-              label="Criar Filme Versus"
-              onPress={submit}
-              loading={createVersus.isPending}
-            />
+            {limitReached ? (
+              <GlassCard>
+                <ThemedText variant="body" color="secondary" style={{ marginBottom: theme.spacing.md }}>
+                  Free permite só 1 Filme Versus ativo por vez. Assine o Premium para criar sem limite.
+                </ThemedText>
+                <PrimaryButton label="Ver o Premium" onPress={() => router.push('/premium')} />
+              </GlassCard>
+            ) : (
+              <PrimaryButton
+                label="Criar Filme Versus"
+                onPress={submit}
+                loading={createVersus.isPending}
+              />
+            )}
             <PrimaryButton label="Trocar títulos" variant="ghost" onPress={() => { setTitleA(null); setTitleB(null); }} />
           </View>
         )}

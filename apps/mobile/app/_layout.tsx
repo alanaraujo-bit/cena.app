@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppBackground } from '@/design-system';
 import { AuthProvider, useAuth, useAuthGate } from '@/features/auth';
 import { usePushTokenSync } from '@/features/notifications/usePushTokenSync';
+import { usePurchasesSync } from '@/features/premium/usePurchasesSync';
 import { queryClient } from '@/lib/queryClient';
 import { ThemeProvider, useColorSchemeResolved, useTheme } from '@/theme';
 
@@ -29,8 +30,9 @@ export default function RootLayout() {
 
 function RootNavigator() {
   useAuthGate();
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   usePushTokenSync(status === 'authenticated');
+  usePurchasesSync(status === 'authenticated', user?.id);
 
   if (status === 'loading') return <SplashLoading />;
 
@@ -43,6 +45,8 @@ function RootNavigator() {
       <Stack.Screen name="user/[username]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="notificacoes" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="molduras" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="premium" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="estatisticas" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="versus/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="versus/criar" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen

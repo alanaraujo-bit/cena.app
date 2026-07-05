@@ -67,6 +67,7 @@ export default function MoldurasScreen() {
                   frame={frame}
                   equipping={equip.isPending && equip.variables === frame.id}
                   onEquip={() => equip.mutate(frame.id)}
+                  onUpgrade={frame.unlockEntitlement === 'premium' ? () => router.push('/premium') : undefined}
                   onGift={
                     library.data?.canGift
                       ? () => {
